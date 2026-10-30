@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
+<meta name="referrer" content="no-referrer">
 <title>Life Hub</title>
 <style>
 /* =========================================================
@@ -13,7 +14,7 @@
   --bg:#f6f5f2; --surface:#ffffff; --surface-2:#f1efea; --border:#dcd8cf;
   --text:#1d2126; --muted:#535a64; --accent:#2b6a5c; --accent-ink:#ffffff; --accent-soft:#e2eeea;
   --danger:#9f3127; --danger-soft:#f8e5e2; --warn:#7a5000; --warn-soft:#f7edd6;
-  --info:#2d5888; --info-soft:#e4ecf6;
+  --info:#2d5888; --info-soft:#e4ecf6; --ok:#25624f; --ok-soft:#dff0e8;
   --radius:14px; --radius-sm:8px;
   --shadow:0 1px 2px rgba(20,20,20,.04),0 4px 14px rgba(20,20,20,.04);
   --font:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
@@ -24,7 +25,7 @@
     --bg:#141619; --surface:#1c1f23; --surface-2:#23272c; --border:#343a41;
     --text:#e9e7e3; --muted:#a9b0b8; --accent:#80c6b4; --accent-ink:#0f1a17; --accent-soft:#1f3530;
     --danger:#f19a90; --danger-soft:#3a2220; --warn:#e5c178; --warn-soft:#3a3020;
-    --info:#9cc0ea; --info-soft:#1f2b3a;
+    --info:#9cc0ea; --info-soft:#1f2b3a; --ok:#8fd3b8; --ok-soft:#1d3229;
     --shadow:none;
   }
 }
@@ -49,12 +50,14 @@ a{color:var(--accent)}
 .brand{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px var(--space) 4px}
 .brand strong{font-size:1.05rem}
 .local-badge{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;color:var(--warn);background:var(--warn-soft);padding:3px 9px;border-radius:999px;text-decoration:none;white-space:nowrap}
+.local-badge.synced{color:var(--ok);background:var(--ok-soft)}
+.local-badge.error{color:var(--danger);background:var(--danger-soft)}
 .nav{display:flex;gap:4px;overflow-x:auto;padding:6px var(--space) 10px;scrollbar-width:thin}
 .nav a{flex:0 0 auto;text-decoration:none;color:var(--muted);padding:8px 12px;border-radius:10px;font-weight:520;font-size:.95rem}
 .nav a:hover{background:var(--surface-2);color:var(--text)}
 .nav a[aria-current="page"]{background:var(--accent-soft);color:var(--text)}
 .nav .count{font-size:.75rem;margin-left:6px;color:var(--danger);font-weight:650}
-main{flex:1;padding:var(--space);max-width:1240px;width:100%;margin:0 auto;outline:none}
+main{flex:1;padding:var(--space);max-width:1240px;width:100%;margin:0 auto;outline:none;min-width:0}
 @media (min-width:980px){
   .app{flex-direction:row}
   .sidebar{width:236px;flex:0 0 236px;height:100vh;border-bottom:0;border-right:1px solid var(--border);display:flex;flex-direction:column}
@@ -68,10 +71,9 @@ main{flex:1;padding:var(--space);max-width:1240px;width:100%;margin:0 auto;outli
 .page-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:var(--space)}
 .page-head p{color:var(--muted);margin:0}
 .grid{display:grid;gap:var(--space)}
+.grid>*,.cal-wrap>*{min-width:0}
 .cols-2{grid-template-columns:1fr}
-.cols-3{grid-template-columns:1fr}
-@media (min-width:760px){.cols-2{grid-template-columns:1fr 1fr}.cols-3{grid-template-columns:1fr 1fr}}
-@media (min-width:1180px){.cols-3{grid-template-columns:1fr 1fr 1fr}}
+@media (min-width:760px){.cols-2{grid-template-columns:1fr 1fr}}
 .span-2{grid-column:1/-1}
 .stack>*+*{margin-top:var(--space)}
 
@@ -83,11 +85,15 @@ main{flex:1;padding:var(--space);max-width:1240px;width:100%;margin:0 auto;outli
 .empty{color:var(--muted);padding:12px;border:1px dashed var(--border);border-radius:var(--radius-sm);background:var(--surface-2);font-size:.93rem}
 .notice{padding:12px 14px;border-radius:var(--radius-sm);background:var(--warn-soft);color:var(--text);border-left:4px solid var(--warn);font-size:.93rem}
 .notice.info{background:var(--info-soft);border-left-color:var(--info)}
+.notice.ok{background:var(--ok-soft);border-left-color:var(--ok)}
+.notice.err{background:var(--danger-soft);border-left-color:var(--danger)}
+code{font:.86em ui-monospace,Consolas,monospace;background:var(--surface-2);padding:1px 5px;border-radius:5px;overflow-wrap:anywhere}
 
 /* ---------- Controls ---------- */
 button,input,select,textarea{font:inherit;color:inherit}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:8px 14px;border-radius:10px;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-weight:550;text-decoration:none;color:var(--text)}
 .btn:hover{background:var(--surface-2)}
+.btn[disabled]{opacity:.55;cursor:not-allowed}
 .btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .btn-primary:hover{background:var(--accent);filter:brightness(1.08)}
 .btn-danger{color:var(--danger);border-color:currentColor;background:transparent}
@@ -109,7 +115,6 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--accent);margin:0;
 .help{font-size:.82rem;color:var(--muted);margin:0}
 .form-grid{display:grid;grid-template-columns:1fr;gap:14px}
 @media (min-width:560px){.form-grid{grid-template-columns:1fr 1fr}.form-grid .full{grid-column:1/-1}}
-@media (max-width:559px){.form-grid .half{grid-column:auto}}
 
 /* Segmented radio (Quick add type) */
 .seg{position:relative;display:inline-flex;border:1px solid var(--border);border-radius:10px;padding:3px;gap:2px;margin:0 0 12px;background:var(--surface-2);flex-wrap:wrap}
@@ -131,6 +136,7 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--accent);margin:0;
 .task.is-done .task-title{text-decoration:line-through;color:var(--muted)}
 .meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
 .row-actions{display:flex;gap:2px;flex:0 0 auto}
+@media (max-width:560px){.task{flex-wrap:wrap}.task .task-main{flex:1 1 calc(100% - 40px)}.task .row-actions{width:100%;justify-content:flex-end;margin-top:-6px}}
 .chip{display:inline-flex;align-items:center;gap:4px;font-size:.76rem;line-height:1.2;padding:3px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);border:1px solid transparent;white-space:nowrap}
 .chip.overdue{background:var(--danger-soft);color:var(--danger);font-weight:620}
 .chip.today{background:var(--warn-soft);color:var(--warn);font-weight:620}
@@ -147,7 +153,6 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--accent);margin:0;
 .event time{flex:0 0 64px;font-variant-numeric:tabular-nums;color:var(--muted);font-size:.9rem;padding-top:1px}
 .event .grow{flex:1;min-width:0}
 
-@media (max-width:560px){.task{flex-wrap:wrap}.task .task-main{flex:1 1 calc(100% - 40px)}.task .row-actions{width:100%;justify-content:flex-end;margin-top:-6px}}
 /* ---------- Progress ---------- */
 .progress{height:8px;background:var(--surface-2);border-radius:999px;overflow:hidden;border:1px solid var(--border)}
 .progress>span{display:block;height:100%;background:var(--accent);border-radius:999px}
@@ -180,7 +185,6 @@ details summary{cursor:pointer;color:var(--accent);font-weight:550;font-size:.9r
 
 /* ---------- Calendar ---------- */
 .cal-wrap{display:grid;gap:var(--space)}
-.cal-wrap>*,.grid>*{min-width:0}
 @media (min-width:1100px){.cal-wrap{grid-template-columns:minmax(0,1.6fr) minmax(280px,1fr)}}
 .cal{width:100%;border-collapse:separate;border-spacing:4px;table-layout:fixed}
 .cal th{font-size:.78rem;color:var(--muted);font-weight:600;padding:4px 0}
@@ -190,7 +194,7 @@ details summary{cursor:pointer;color:var(--accent);font-weight:550;font-size:.9r
 .cal-day.is-today .dnum{background:var(--accent);color:var(--accent-ink)}
 .cal-day[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
 .dnum{font-size:.8rem;font-weight:650;width:24px;height:24px;border-radius:50%;display:grid;place-items:center}
-.cal-item{font-size:.72rem;line-height:1.25;padding:1px 5px;border-radius:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.cal-item{display:block;font-size:.72rem;line-height:1.25;padding:1px 5px;border-radius:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .cal-item.ev{background:var(--info-soft);color:var(--info)}
 .cal-item.tk{background:var(--surface-2);color:var(--muted)}
 .cal-item.od{background:var(--danger-soft);color:var(--danger)}
@@ -204,7 +208,6 @@ details summary{cursor:pointer;color:var(--accent);font-weight:550;font-size:.9r
   .dots{display:flex}
 }
 
-/* ---------- Notes ---------- */
 .note-body{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.95rem}
 
 /* ---------- Dialog ---------- */
@@ -219,14 +222,12 @@ dialog::backdrop{background:rgba(15,18,22,.45)}
 .toast.error{background:var(--danger);color:#fff}
 .toast button{background:transparent;border:1px solid currentColor;color:inherit;border-radius:8px;padding:4px 10px;cursor:pointer;font-weight:600}
 
-table.simple{width:100%;border-collapse:collapse;font-size:.92rem}
-table.simple th,table.simple td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--border);vertical-align:top}
-table.simple th{color:var(--muted);font-weight:600;font-size:.82rem}
-.table-scroll{overflow-x:auto}
 .stat{display:flex;flex-direction:column}
 .stat b{font-size:1.6rem;font-variant-numeric:tabular-nums}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
 kbd{font:.8rem ui-monospace,Consolas,monospace;border:1px solid var(--border);border-bottom-width:2px;border-radius:5px;padding:1px 5px;background:var(--surface-2)}
+ol.steps{padding-left:1.3em;margin:6px 0}
+ol.steps li{margin:4px 0}
 @media (prefers-reduced-motion:no-preference){.progress>span{transition:width .3s ease}}
 @media print{.sidebar,.toasts,.row-actions,.card-actions{display:none}}
 </style>
@@ -237,14 +238,14 @@ kbd{font:.8rem ui-monospace,Consolas,monospace;border:1px solid var(--border);bo
   <header class="sidebar">
     <div class="brand">
       <strong>Life Hub</strong>
-      <a class="local-badge" href="#data" title="Your data is saved in this browser on this device only">● Device-local data</a>
+      <a class="local-badge" id="sync-badge" href="#data">● Device-local data</a>
     </div>
     <nav class="nav" id="nav" aria-label="Sections"></nav>
     <div class="sidebar-foot">
       <p>Shortcuts: <kbd>N</kbd> new task · <kbd>/</kbd> search tasks · <kbd>1</kbd>–<kbd>9</kbd> sections</p>
     </div>
   </header>
-  <main id="main" tabindex="-1" aria-live="off"></main>
+  <main id="main" tabindex="-1"></main>
 </div>
 
 <dialog id="dlg" aria-labelledby="dlg-title">
@@ -266,23 +267,29 @@ kbd{font:.8rem ui-monospace,Consolas,monospace;border:1px solid var(--border);bo
 /* =====================================================================
    LIFE HUB — single-file personal dashboard
    ---------------------------------------------------------------------
-   Architecture (deliberately simple, no build step):
-   • One `state` object holds all data. It is persisted to localStorage
-     on every change via save(). There is NO network code: nothing
-     leaves this device unless you export it.
-   • Each section has a render function that returns an HTML string.
-     All user text goes through esc() before being inserted, so imported
-     or typed content can never inject markup/script.
-   • Interaction uses event delegation: elements carry data-action /
-     data-form / data-filter attributes and a few document-level
-     listeners dispatch them. This keeps handlers working after re-render.
-   • After each re-render we restore keyboard focus to the "same"
-     control (see focusKey) so keyboard users don't lose their place.
-   • Dates are handled as local "YYYY-MM-DD" strings to avoid timezone
-     shifts that happen with Date#toISOString().
+   Architecture (deliberately simple, no build step, no third-party code):
+   • One `state` object holds all data, persisted to localStorage.
+   • Optional OneDrive sync (Microsoft Graph). Sign-in uses the OAuth 2.0
+     authorization-code flow with PKCE, written in plain JS so the file
+     has no external script dependencies. There is NO client secret:
+     the only configuration is your app's public Client ID, which you
+     enter on the Data & sync page (it is stored in this browser, not
+     in this file).
+   • Sync model: every item has an id and an updatedAt timestamp that
+     save() stamps automatically when the item changes. Deletions leave
+     a "tombstone" (id → time) so they propagate to other devices.
+     Sync = download the OneDrive copy, merge item-by-item (newest
+     wins), upload with an eTag check so two devices can't silently
+     overwrite each other.
+   • Views are render functions returning HTML strings. All user text
+     goes through esc() so typed/imported/synced text can't inject markup.
+   • Interaction uses event delegation via data-action / data-form /
+     data-filter attributes.
+   • Dates are local "YYYY-MM-DD" strings to avoid timezone shifts.
    ===================================================================== */
 
 const STORAGE_KEY = 'lifehub.v1';
+const SYNC_KEY = 'lifehub.sync.v1';      // sync settings + tokens, kept separate so exports never contain tokens
 const SCHEMA = 1;
 
 /* ---------- Small utilities ---------- */
@@ -306,11 +313,12 @@ const addMonths = (iso, n) => {
   const last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
   d.setDate(Math.min(day, last)); return toISO(d);
 };
-const diffDays = (a, b) => Math.round((parseISO(b) - parseISO(a)) / 86400000); // b − a, DST-safe via rounding
+const diffDays = (a, b) => Math.round((parseISO(b) - parseISO(a)) / 86400000);
 const fmtDate = (iso, o = { weekday: 'short', day: 'numeric', month: 'short' }) => iso ? parseISO(iso).toLocaleDateString('en-AU', o) : '';
 const fmtLong = iso => fmtDate(iso, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 const fmtTime = t => { if (!t) return ''; const [h, m] = t.split(':').map(Number); const d = new Date(); d.setHours(h, m); return d.toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }); };
-const startOfWeek = iso => { const d = parseISO(iso); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return toISO(d); }; // Monday
+const fmtStamp = ts => ts ? new Date(ts).toLocaleString('en-AU', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
+const startOfWeek = iso => { const d = parseISO(iso); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return toISO(d); };
 const isoOfTimestamp = ts => ts ? toISO(new Date(ts)) : '';
 function relDate(iso) {
   if (!iso) return '';
@@ -333,16 +341,16 @@ function untilText(iso) {
 }
 
 /* =====================================================================
-   DATA: empty state, sample data, load/save
+   DATA: empty state, sample data, load/save, change tracking
    ===================================================================== */
+const COLLECTIONS = ['tasks', 'events', 'goals', 'habits', 'projects', 'notes', 'reviews'];
 function emptyState() {
   return {
-    meta: { schema: SCHEMA, createdAt: nowISO(), updatedAt: null, isSample: false, lastExport: null },
+    meta: { schema: SCHEMA, createdAt: nowISO(), updatedAt: null, isSample: false, lastExport: null, deleted: {} },
     settings: { categories: ['Home', 'Health', 'Family', 'Finance', 'Learning', 'Admin', 'Personal'], shortcuts: true },
     tasks: [], events: [], goals: [], habits: [], projects: [], notes: [], reviews: []
   };
 }
-const COLLECTIONS = ['tasks', 'events', 'goals', 'habits', 'projects', 'notes', 'reviews'];
 
 /* Sample data is generated relative to today so the dashboard looks "live". */
 function sampleData() {
@@ -367,6 +375,7 @@ function sampleData() {
       measureLabel: 'Books finished', measureStart: 0, measureCurrent: 7, measureTarget: 12, createdAt: new Date(Date.now() - 200 * 864e5).toISOString(), milestones: [] }
   ];
   const T = (o) => ({ id: uid(), notes: '', due: '', time: '', priority: 'medium', category: '', recur: 'none', projectId: '', goalId: '', reminder: false, focus: false, done: false, completedAt: null, createdAt: nowISO(), ...o });
+  const nextSat = d(((6 - new Date().getDay()) + 7) % 7 || 7);
   s.tasks = [
     T({ title: 'Pay electricity bill', due: d(2), priority: 'high', category: 'Finance', recur: 'monthly' }),
     T({ title: 'Book car service', due: d(-1), category: 'Admin' }),
@@ -375,7 +384,7 @@ function sampleData() {
     T({ title: 'Call Mum', due: d(1), time: '18:30', priority: 'low', category: 'Family', reminder: true }),
     T({ title: 'Put bins out', due: t, time: '19:00', priority: 'low', category: 'Home', recur: 'weekly', reminder: true }),
     T({ title: 'Gather documents for passport renewal', due: d(9), category: 'Admin' }),
-    T({ title: 'Saturday long run — 7 km', due: d(((6 - new Date().getDay()) + 7) % 7 || 7), category: 'Health', goalId: G.run, priority: 'high' }),
+    T({ title: 'Saturday long run — 7 km', due: nextSat, category: 'Health', goalId: G.run, priority: 'high' }),
     T({ title: 'Register for the 10 km event', due: d(6), category: 'Health', goalId: G.run, priority: 'high' }),
     T({ title: 'Set up automatic savings transfer', category: 'Finance', goalId: G.fund, done: true, completedAt: new Date(Date.now() - 20 * 864e5).toISOString() }),
     T({ title: 'Finish current book', priority: 'low', category: 'Learning', goalId: G.read }),
@@ -388,7 +397,6 @@ function sampleData() {
     T({ title: 'List six weeks of post topics', category: 'Personal', projectId: P.blog, done: true, completedAt: new Date(Date.now() - 4 * 864e5).toISOString() }),
     T({ title: 'Schedule dentist check-up', category: 'Health' })
   ];
-  const nextSat = d(((6 - new Date().getDay()) + 7) % 7 || 7);
   s.events = [
     { id: uid(), title: 'Coffee with Sarah', date: t, time: '10:00', endTime: '11:00', location: 'Corner café', notes: '' },
     { id: uid(), title: 'Swimming lessons', date: d(1), time: '16:30', endTime: '17:15', location: 'Aquatic centre', notes: 'Pack towels and goggles' },
@@ -406,10 +414,10 @@ function sampleData() {
       steps: ['Tidy the kitchen bench', 'Pack bags for tomorrow', 'Phone on charge outside the bedroom', 'Ten minutes of reading'], stepLog: { [t]: [0] }, log: logFrom([1, 2, 3, 5, 8, 9, 12]), createdAt: nowISO() }
   ];
   s.notes = [
-    { id: uid(), title: 'Garden plant list', kind: 'idea', linkType: 'project', linkId: P.garden, body: 'Herbs: basil, parsley, coriander, chives\nVeg: cherry tomatoes, lettuce, snow peas, zucchini\nCheck which grow well this season.', createdAt: nowISO(), updatedAt: nowISO() },
-    { id: uid(), title: 'Why I’m running', kind: 'journal', linkType: 'goal', linkId: G.run, body: 'Ran 6.5 km this weekend — the furthest yet. Slow is fine. The point is to keep turning up.', createdAt: new Date(Date.now() - 3 * 864e5).toISOString(), updatedAt: nowISO() },
-    { id: uid(), title: 'Gift ideas', kind: 'note', linkType: '', linkId: '', body: 'Jess — book voucher, nice candle\nMum — framed photo from the photo book project', createdAt: nowISO(), updatedAt: nowISO() },
-    { id: uid(), title: `Journal — ${fmtDate(d(-1))}`, kind: 'journal', linkType: '', linkId: '', body: 'What went well? Got the savings transfer automated.\n\nWhat felt hard? Evenings are rushed — the wind-down routine helps.\n\nWhat matters tomorrow? Meal plan and an early night.', createdAt: new Date(Date.now() - 864e5).toISOString(), updatedAt: nowISO() }
+    { id: uid(), title: 'Garden plant list', kind: 'idea', linkType: 'project', linkId: P.garden, body: 'Herbs: basil, parsley, coriander, chives\nVeg: cherry tomatoes, lettuce, snow peas, zucchini\nCheck which grow well this season.', createdAt: nowISO() },
+    { id: uid(), title: 'Why I’m running', kind: 'journal', linkType: 'goal', linkId: G.run, body: 'Ran 6.5 km this weekend — the furthest yet. Slow is fine. The point is to keep turning up.', createdAt: new Date(Date.now() - 3 * 864e5).toISOString() },
+    { id: uid(), title: 'Gift ideas', kind: 'note', linkType: '', linkId: '', body: 'Jess — book voucher, nice candle\nMum — framed photo from the photo book project', createdAt: nowISO() },
+    { id: uid(), title: `Journal — ${fmtDate(d(-1))}`, kind: 'journal', linkType: '', linkId: '', body: 'What went well? Got the savings transfer automated.\n\nWhat felt hard? Evenings are rushed — the wind-down routine helps.\n\nWhat matters tomorrow? Meal plan and an early night.', createdAt: new Date(Date.now() - 864e5).toISOString() }
   ];
   s.reviews = [
     { id: uid(), weekOf: startOfWeek(d(-7)), wins: 'Hit three walks and a 6.5 km run.', challenges: 'Two late nights threw out the routine.', learned: 'Planning meals on Sunday saves weeknight stress.', nextSteps: 'Register for 10 km event\nBook car service', createdAt: new Date(Date.now() - 6 * 864e5).toISOString() }
@@ -417,11 +425,12 @@ function sampleData() {
   return s;
 }
 
-/* Normalise anything loaded or imported into the current shape. */
+/* Normalise anything loaded, imported or synced into the current shape. */
 function normalise(d) {
   const base = emptyState();
   if (!d || typeof d !== 'object') return base;
   base.meta = { ...base.meta, ...(d.meta || {}) };
+  if (!base.meta.deleted || typeof base.meta.deleted !== 'object') base.meta.deleted = {};
   base.settings = { ...base.settings, ...(d.settings || {}) };
   if (!Array.isArray(base.settings.categories)) base.settings.categories = emptyState().settings.categories;
   for (const k of COLLECTIONS) {
@@ -430,6 +439,34 @@ function normalise(d) {
   base.goals.forEach(g => { if (!Array.isArray(g.milestones)) g.milestones = []; });
   base.habits.forEach(h => { if (!Array.isArray(h.log)) h.log = []; if (!Array.isArray(h.steps)) h.steps = []; if (!h.stepLog || typeof h.stepLog !== 'object') h.stepLog = {}; });
   return base;
+}
+
+/* ---- Change tracking ----
+   Rather than remembering to set updatedAt in every handler, save()
+   compares each item with a snapshot taken at the last save. Changed
+   items get a fresh updatedAt; vanished items get a tombstone. This is
+   what makes item-level sync merging reliable. */
+let snap = new Map();
+const itemKey = (k, id) => k + '\u0001' + id;
+const withoutStamp = x => { const { updatedAt, ...rest } = x; return JSON.stringify(rest); };
+function takeSnapshot() {
+  snap = new Map();
+  for (const k of COLLECTIONS) for (const x of state[k]) snap.set(itemKey(k, x.id), withoutStamp(x));
+}
+function stampChanges() {
+  const now = nowISO(), seen = new Set(), tomb = state.meta.deleted || (state.meta.deleted = {});
+  for (const k of COLLECTIONS) for (const x of state[k]) {
+    const key = itemKey(k, x.id); seen.add(key);
+    if (snap.get(key) !== withoutStamp(x)) { x.updatedAt = now; delete tomb[x.id]; }
+    else if (!x.updatedAt) x.updatedAt = x.createdAt || now;
+  }
+  for (const key of snap.keys()) if (!seen.has(key)) tomb[key.split('\u0001')[1]] = now;
+  pruneTombstones(tomb);
+  takeSnapshot();
+}
+function pruneTombstones(tomb) {
+  const cutoff = new Date(Date.now() - 120 * 864e5).toISOString(); // keep 120 days so a rarely used device still learns about deletions
+  for (const [id, t] of Object.entries(tomb)) if (t < cutoff) delete tomb[id];
 }
 
 let storageOK = true;
@@ -442,13 +479,51 @@ function load() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch (e) { storageOK = false; }
   return s;
 }
-function save() {
-  state.meta.updatedAt = nowISO();
+function persistLocal() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); storageOK = true; }
   catch (e) { storageOK = false; toast('Could not save — browser storage may be full or disabled. Export a backup now.', { type: 'error' }); }
 }
+/* save(): every user change goes through here. */
+function save() {
+  stampChanges();
+  state.meta.updatedAt = nowISO();
+  persistLocal();
+  Sync.schedule();
+}
 
 let state = load();
+takeSnapshot();
+
+/* Item-level merge used by both Import (merge mode) and OneDrive sync.
+   Newest updatedAt wins per item; a tombstone newer than an item deletes it. */
+const stampOf = x => x.updatedAt || x.completedAt || x.createdAt || '';
+function mergeInto(target, incoming) {
+  const tomb = { ...(target.meta.deleted || {}) };
+  for (const [id, t] of Object.entries(incoming.meta.deleted || {})) if (!tomb[id] || t > tomb[id]) tomb[id] = t;
+  let added = 0, updated = 0, removed = 0;
+  for (const k of COLLECTIONS) {
+    const byId = new Map(target[k].map(x => [x.id, x]));
+    for (const x of incoming[k]) {
+      const cur = byId.get(x.id);
+      if (!cur) { byId.set(x.id, x); added++; }
+      else if (stampOf(x) > stampOf(cur)) { byId.set(x.id, x); updated++; }
+    }
+    const before = byId.size;
+    target[k] = [...byId.values()].filter(x => !(tomb[x.id] && tomb[x.id] >= stampOf(x)));
+    removed += before - target[k].length;
+  }
+  incoming.settings.categories.forEach(c => { if (!target.settings.categories.includes(c)) target.settings.categories.push(c); });
+  pruneTombstones(tomb);
+  target.meta.deleted = tomb;
+  return { added, updated, removed };
+}
+/* The part of state that is shared between devices (UI prefs and local metadata excluded). */
+function shareable(s) {
+  const out = { app: 'life-hub', schema: SCHEMA, meta: { schema: SCHEMA, deleted: s.meta.deleted || {} }, settings: { categories: s.settings.categories } };
+  for (const k of COLLECTIONS) out[k] = s[k];
+  return out;
+}
+const canonical = s => JSON.stringify(shareable(s), (k, v) => Array.isArray(v) && v.length && v[0] && v[0].id ? [...v].sort((a, b) => a.id < b.id ? -1 : 1) : v);
 
 /* UI-only state (not persisted) */
 const ui = {
@@ -458,6 +533,185 @@ const ui = {
   noteKind: '', noteLink: '', noteSearch: '',
   calMonth: today().slice(0, 8) + '01', calSelected: today()
 };
+
+/* =====================================================================
+   ONEDRIVE SYNC (Microsoft Graph, personal accounts, PKCE, no secret)
+   ===================================================================== */
+const Sync = (() => {
+  const AUTHORITY = 'https://login.microsoftonline.com/consumers/oauth2/v2.0'; // personal Microsoft accounts only
+  const GRAPH = 'https://graph.microsoft.com/v1.0';
+  const SCOPES = 'openid profile offline_access User.Read Files.ReadWrite.AppFolder';
+  const FILE = 'lifehub-data.json';
+  const AUTO_MS = 3 * 60 * 1000; // background pull every 3 minutes while visible
+
+  let cfg = readCfg();
+  let busy = false, again = false, timer = null;
+  const status = { state: cfg.tokens ? 'idle' : 'off', message: '' };
+
+  function readCfg() { try { return JSON.parse(localStorage.getItem(SYNC_KEY)) || {}; } catch (_) { return {}; } }
+  function writeCfg() { try { localStorage.setItem(SYNC_KEY, JSON.stringify(cfg)); } catch (_) {} }
+  const redirectUri = () => location.origin + location.pathname;
+  const supported = () => window.isSecureContext && /^https?:$/.test(location.protocol) && !!(crypto && crypto.subtle);
+  const signedIn = () => !!(cfg.tokens && cfg.tokens.refresh);
+
+  const b64url = buf => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const randomStr = (n = 48) => b64url(crypto.getRandomValues(new Uint8Array(n)));
+
+  async function signIn() {
+    if (!supported()) { toast('Sync needs the dashboard to be opened from an https:// address (or http://localhost).', { type: 'error' }); return; }
+    if (!cfg.clientId) { toast('Enter your Application (client) ID first.', { type: 'error' }); return; }
+    const verifier = randomStr(64), st = randomStr(16);
+    const challenge = b64url(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier)));
+    sessionStorage.setItem('lifehub.pkce', JSON.stringify({ verifier, state: st, hash: location.hash || '#data' }));
+    const q = new URLSearchParams({
+      client_id: cfg.clientId, response_type: 'code', redirect_uri: redirectUri(), response_mode: 'query',
+      scope: SCOPES, state: st, code_challenge: challenge, code_challenge_method: 'S256', prompt: 'select_account'
+    });
+    location.assign(`${AUTHORITY}/authorize?${q}`);
+  }
+
+  /* Called once on page load: finishes sign-in if we've just come back from Microsoft. */
+  async function handleRedirect() {
+    const q = new URLSearchParams(location.search);
+    if (!q.has('code') && !q.has('error')) return;
+    const saved = JSON.parse(sessionStorage.getItem('lifehub.pkce') || 'null');
+    sessionStorage.removeItem('lifehub.pkce');
+    history.replaceState(null, '', redirectUri() + (saved?.hash || '#data'));
+    if (q.has('error')) { setStatus('error', q.get('error_description') || q.get('error')); toast('Sign-in was cancelled or failed.', { type: 'error' }); return; }
+    if (!saved || saved.state !== q.get('state')) { setStatus('error', 'Sign-in response did not match this browser session. Please try again.'); return; }
+    try {
+      await tokenRequest({ grant_type: 'authorization_code', code: q.get('code'), redirect_uri: redirectUri(), code_verifier: saved.verifier });
+      const me = await graph('/me?$select=displayName,userPrincipalName');
+      cfg.account = me ? (me.userPrincipalName || me.displayName || '') : '';
+      cfg.firstSync = true; writeCfg();
+      toast(`Signed in${cfg.account ? ' as ' + cfg.account : ''}. Syncing…`);
+      await syncNow();
+    } catch (e) { setStatus('error', e.message); }
+  }
+
+  async function tokenRequest(params) {
+    const body = new URLSearchParams({ client_id: cfg.clientId, scope: SCOPES, ...params });
+    const r = await fetch(`${AUTHORITY}/token`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      if (j.error === 'invalid_grant' || j.error === 'interaction_required') { cfg.tokens = null; writeCfg(); throw new Error('Your OneDrive sign-in has expired. Select “Sign in” to reconnect — your local data is safe.'); }
+      throw new Error(j.error_description ? j.error_description.split('\r\n')[0] : `Sign-in failed (${r.status}).`);
+    }
+    cfg.tokens = { access: j.access_token, refresh: j.refresh_token || cfg.tokens?.refresh, exp: Date.now() + (j.expires_in || 3600) * 1000 };
+    writeCfg();
+  }
+  async function accessToken() {
+    if (!signedIn()) throw new Error('Not signed in.');
+    if (cfg.tokens.access && cfg.tokens.exp - 90000 > Date.now()) return cfg.tokens.access;
+    await tokenRequest({ grant_type: 'refresh_token', refresh_token: cfg.tokens.refresh });
+    return cfg.tokens.access;
+  }
+  async function graphRaw(path, opts = {}, retry = true) {
+    const r = await fetch(GRAPH + path, { ...opts, headers: { ...(opts.headers || {}), Authorization: 'Bearer ' + await accessToken() } });
+    if (r.status === 401 && retry) { cfg.tokens.exp = 0; return graphRaw(path, opts, false); }
+    return r;
+  }
+  async function graph(path) {
+    const r = await graphRaw(path);
+    if (r.status === 404) return null;
+    if (!r.ok) throw new Error(await graphError(r));
+    return r.json();
+  }
+  async function graphError(r) {
+    const j = await r.json().catch(() => ({}));
+    if (r.status === 403) return 'OneDrive refused access (403). Check the app has the Files.ReadWrite.AppFolder permission — see troubleshooting below.';
+    return j.error?.message || `OneDrive request failed (${r.status}).`;
+  }
+
+  /* One sync pass: pull → merge → push (with eTag so concurrent writes are detected). */
+  async function syncNow() {
+    if (!signedIn() || !navigator.onLine) { if (!navigator.onLine && signedIn()) setStatus('offline'); return; }
+    if (busy) { again = true; return; }
+    busy = true; setStatus('syncing');
+    try {
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        const meta = await graph(`/me/drive/special/approot:/${FILE}`);
+        let remote = null, etag = null;
+        if (meta) {
+          etag = meta.eTag;
+          const dl = meta['@microsoft.graph.downloadUrl'];
+          const r = dl ? await fetch(dl) : await graphRaw(`/me/drive/special/approot:/${FILE}:/content`);
+          if (!r.ok) throw new Error(`Could not download sync file (${r.status}).`);
+          remote = normalise(await r.json());
+        }
+        // First connection on a device still showing sample data: adopt OneDrive data instead of mixing.
+        if (remote && cfg.firstSync && state.meta.isSample) {
+          const keep = { lastExport: state.meta.lastExport };
+          state = normalise(remote); Object.assign(state.meta, keep, { isSample: false });
+          persistLocal(); takeSnapshot(); render();
+          toast('Loaded your data from OneDrive (sample data on this device was replaced).');
+        } else if (remote) {
+          const before = canonical(state);
+          mergeInto(state, remote);
+          if (canonical(state) !== before) { state.meta.isSample = false; persistLocal(); takeSnapshot(); render(); }
+        }
+        cfg.firstSync = false;
+        if (remote && canonical(state) === canonical(remote)) break; // nothing to upload
+        const headers = { 'Content-Type': 'application/json' };
+        if (etag) headers['If-Match'] = etag; else headers['If-None-Match'] = '*';
+        const put = await graphRaw(`/me/drive/special/approot:/${FILE}:/content`, { method: 'PUT', headers, body: JSON.stringify(shareable(state)) });
+        if (put.status === 412 || put.status === 409) { if (attempt < 3) continue; throw new Error('Another device was saving at the same moment. Will retry shortly.'); }
+        if (!put.ok) throw new Error(await graphError(put));
+        break;
+      }
+      cfg.lastSync = nowISO(); writeCfg();
+      setStatus('ok');
+    } catch (e) {
+      setStatus(signedIn() ? 'error' : 'expired', e.message || String(e));
+    } finally {
+      busy = false;
+      if (again) { again = false; setTimeout(syncNow, 400); }
+    }
+  }
+
+  /* Debounced push after local edits. */
+  function schedule() {
+    if (!signedIn()) return;
+    clearTimeout(timer); timer = setTimeout(syncNow, 2500);
+  }
+  function setStatus(s, msg = '') {
+    status.state = s; status.message = msg;
+    updateBadge();
+    if (currentView() === 'data' && !document.querySelector('#main :focus')) render();
+    else if (currentView() === 'data') { const el = $('#sync-status'); if (el) el.innerHTML = statusHTML(); }
+  }
+  function statusHTML() {
+    const s = status.state;
+    if (s === 'syncing') return `<p class="notice info">Syncing with OneDrive…</p>`;
+    if (s === 'ok' || s === 'idle') return `<p class="notice ok">Synced with OneDrive${cfg.account ? ' (' + esc(cfg.account) + ')' : ''}. Last sync: ${esc(fmtStamp(cfg.lastSync))}.</p>`;
+    if (s === 'offline') return `<p class="notice">You’re offline. Changes are saved on this device and will sync when you reconnect.</p>`;
+    if (s === 'expired') return `<p class="notice err">${esc(status.message || 'Sign-in expired.')} </p>`;
+    if (s === 'error') return `<p class="notice err">Sync problem: ${esc(status.message)} Your data is still saved on this device.</p>`;
+    return `<p class="notice">Not connected. Data is stored on this device only.</p>`;
+  }
+  function updateBadge() {
+    const b = $('#sync-badge'); if (!b) return;
+    const s = status.state;
+    b.className = 'local-badge' + (signedIn() && (s === 'ok' || s === 'idle' || s === 'syncing') ? ' synced' : (s === 'error' || s === 'expired') ? ' error' : '');
+    b.textContent = !signedIn() ? (s === 'expired' ? '● Sync: sign in again' : '● Device-local data')
+      : s === 'syncing' ? '● Syncing…' : s === 'error' ? '● Sync problem' : s === 'offline' ? '● Offline — will sync' : '● Synced with OneDrive';
+    b.title = !signedIn() ? 'Data is saved in this browser on this device only' : 'Data syncs via your OneDrive app folder';
+  }
+  function signOut() {
+    cfg.tokens = null; cfg.account = ''; cfg.lastSync = null; writeCfg();
+    setStatus('off'); toast('Signed out. Data stays on this device; the OneDrive copy is unchanged.');
+  }
+  function setClientId(id) { cfg.clientId = id.trim(); writeCfg(); }
+
+  // Background triggers
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) syncNow(); });
+  window.addEventListener('online', () => syncNow());
+  window.addEventListener('offline', () => signedIn() && setStatus('offline'));
+  setInterval(() => { if (!document.hidden) syncNow(); }, AUTO_MS);
+
+  return { signIn, signOut, handleRedirect, syncNow, schedule, statusHTML, updateBadge, setClientId, supported, signedIn, redirectUri,
+    get cfg() { return cfg; }, get status() { return status; } };
+})();
 
 /* =====================================================================
    DOMAIN LOGIC
@@ -492,11 +746,9 @@ function nextDue(iso, recur) {
   }
 }
 
-/* Recurring tasks: completing one creates the next instance.
-   Design decision: the next due date is calculated from the *due date*
-   (not completion date) to keep a stable rhythm, but it is rolled forward
-   past today so a long-overdue recurring task doesn't spawn another
-   overdue copy. Undoing the completion removes the untouched spawned copy. */
+/* Recurring tasks: completing one creates the next instance, calculated
+   from the due date (stable rhythm) but rolled past today so an overdue
+   repeat doesn't spawn another overdue copy. Undo removes the copy. */
 function toggleTask(id) {
   const t = find('tasks', id); if (!t) return;
   if (!t.done) {
@@ -506,6 +758,7 @@ function toggleTask(id) {
       let next = nextDue(t.due || today(), t.recur);
       while (next <= today()) next = nextDue(next, t.recur);
       const copy = { ...t, id: uid(), done: false, completedAt: null, due: next, createdAt: nowISO(), spawnedId: null };
+      delete copy.updatedAt;
       state.tasks.push(copy); t.spawnedId = copy.id;
       msg += ` Next one is due ${fmtDate(next)}.`;
     }
@@ -522,9 +775,8 @@ function toggleTask(id) {
   }
 }
 
-/* "Next best actions": a transparent scoring model rather than a black box.
-   Overdue > due today > due soon, boosted by priority, today's focus and
-   whether the task moves a goal forward. Each suggestion shows its reasons. */
+/* "Next best actions": transparent scoring. Overdue > due today > due soon,
+   boosted by priority, today's focus and goal links. Reasons are shown. */
 function nextBestActions(limit = 5) {
   const t0 = today();
   const scored = openTasks().map(t => {
@@ -533,7 +785,7 @@ function nextBestActions(limit = 5) {
       const n = diffDays(t0, t.due);
       if (n < 0) { score += 100 + Math.min(-n, 30); why.push(`${plural(-n, 'day')} overdue`); }
       else if (n === 0) { score += 80; why.push(t.time ? `Due today at ${fmtTime(t.time)}` : 'Due today'); }
-      else if (n <= 3) { score += 60 - n * 5; why.push(`Due ${relDate(t.due).toLowerCase() === 'tomorrow' ? 'tomorrow' : relDate(t.due)}`); }
+      else if (n <= 3) { score += 60 - n * 5; why.push(n === 1 ? 'Due tomorrow' : `Due ${relDate(t.due)}`); }
       else if (n <= 7) { score += 30; why.push('Due this week'); }
     }
     if (t.priority === 'high') { score += 25; why.push('High priority'); }
@@ -543,18 +795,17 @@ function nextBestActions(limit = 5) {
     return { kind: 'task', t, score, why };
   }).filter(x => x.score >= 30).sort((a, b) => b.score - a.score);
   const out = scored.slice(0, limit);
-  // Gentle nudge: active goals with no next action at all.
   if (out.length < limit) {
-    state.goals.filter(g => g.status !== 'done' && !goalNextAction(g)).slice(0, limit - out.length)
+    state.goals.filter(g => g.status === 'active' && !goalNextAction(g)).slice(0, limit - out.length)
       .forEach(g => out.push({ kind: 'goal', g, why: ['This goal has no next step yet'] }));
   }
   return out;
 }
 
-/* Goal progress: averages whichever signals exist — the numeric measure
-   and milestone completion. Linked tasks are only a fallback, because
-   recurring tasks would otherwise distort the percentage. */
+/* Goal progress averages the numeric measure and milestone completion.
+   Linked tasks are only a fallback (recurring tasks would distort it). */
 function goalProgress(g) {
+  if (g.status === 'done') return 100;
   const parts = [];
   const s = Number(g.measureStart) || 0, c = Number(g.measureCurrent) || 0, tg = Number(g.measureTarget);
   if (g.measureTarget !== '' && g.measureTarget != null && !isNaN(tg) && tg !== s) parts.push(clamp01((c - s) / (tg - s)));
@@ -563,24 +814,20 @@ function goalProgress(g) {
     const ts = state.tasks.filter(t => t.goalId === g.id);
     if (ts.length) parts.push(ts.filter(t => t.done).length / ts.length);
   }
-  if (g.status === 'done') return 100;
   return parts.length ? Math.round(parts.reduce((a, b) => a + b, 0) / parts.length * 100) : 0;
 }
 function goalPace(g) {
-  if (!g.targetDate || g.status === 'done') return null;
+  if (!g.targetDate || g.status !== 'active') return null;
   const start = isoOfTimestamp(g.createdAt) || today();
   const total = diffDays(start, g.targetDate); if (total <= 0) return null;
   const expected = clamp01(diffDays(start, today()) / total) * 100;
-  const p = goalProgress(g);
-  if (p >= expected - 10) return { ok: true, text: 'On track' };
-  return { ok: false, text: 'Behind the plan — consider a smaller next step or a new date' };
+  return goalProgress(g) >= expected - 10 ? { ok: true, text: 'On track' } : { ok: false, text: 'Behind the plan — consider a smaller next step or a new date' };
 }
 function goalNextAction(g) {
   const open = state.tasks.filter(t => t.goalId === g.id && !t.done).sort(sortTasks);
   if (open[0]) return { type: 'task', task: open[0] };
   const m = (g.milestones || []).find(m => !m.done);
-  if (m) return { type: 'milestone', m };
-  return null;
+  return m ? { type: 'milestone', m } : null;
 }
 function projectStats(p) {
   const ts = state.tasks.filter(t => t.projectId === p.id);
@@ -588,10 +835,8 @@ function projectStats(p) {
   return { total: ts.length, done, pct: p.status === 'done' ? 100 : ts.length ? Math.round(done / ts.length * 100) : 0, open: ts.filter(t => !t.done).sort(sortTasks) };
 }
 
-/* Habits — deliberately no streaks. We show recent consistency in a
-   rolling 14-day window and use encouraging language. Missing a day
-   never "resets" anything. */
-function habitDone(h, iso) { return h.log.includes(iso); }
+/* Habits — no streaks. Rolling 14-day consistency with encouraging copy. */
+const habitDone = (h, iso) => h.log.includes(iso);
 function toggleHabitDay(id, iso) {
   const h = find('habits', id); if (!h) return;
   if (habitDone(h, iso)) h.log = h.log.filter(x => x !== iso); else h.log.push(iso);
@@ -605,10 +850,8 @@ function habitSummary(h) {
   const ws = startOfWeek(t0);
   const thisWeek = h.log.filter(d => d >= ws && d <= t0).length;
   let text, ratio;
-  if (h.cadence === 'weekly') {
-    const target = Number(h.targetPerWeek) || 1; ratio = clamp01(thisWeek / target);
-    text = `${thisWeek} of ${target} this week`;
-  } else { ratio = n14 / 14; text = `${n14} of the last 14 days`; }
+  if (h.cadence === 'weekly') { const target = Number(h.targetPerWeek) || 1; ratio = clamp01(thisWeek / target); text = `${thisWeek} of ${target} this week`; }
+  else { ratio = n14 / 14; text = `${n14} of the last 14 days`; }
   const enc = ratio >= .7 ? 'A strong rhythm — keep it gentle.' : ratio >= .4 ? 'Steady progress. Every check-in counts.' : ratio > 0 ? 'You’ve been showing up — small steps add up.' : 'A fresh start is always available. Try once today?';
   return { last14, n14, thisWeek, text, enc };
 }
@@ -617,7 +860,6 @@ function toggleRoutineStep(id, idx) {
   const list = new Set(h.stepLog[t0] || []);
   list.has(idx) ? list.delete(idx) : list.add(idx);
   h.stepLog[t0] = [...list];
-  // Prune step history older than 30 days to keep storage small.
   Object.keys(h.stepLog).forEach(k => { if (k < addDays(t0, -30)) delete h.stepLog[k]; });
   const complete = h.steps.length && h.steps.every((_, i) => list.has(i));
   const was = habitDone(h, t0);
@@ -631,6 +873,9 @@ function toggleRoutineStep(id, idx) {
    FORMS (generic dialog driven by field definitions)
    ===================================================================== */
 const catOpts = () => state.settings.categories.map(c => [c, c]);
+function linkOptions() {
+  return [...state.goals.map(g => ['goal:' + g.id, 'Goal: ' + g.title]), ...state.projects.map(p => ['project:' + p.id, 'Project: ' + p.title])];
+}
 const FORMS = {
   task: { coll: 'tasks', label: 'task', fields: [
     { name: 'title', label: 'Task', type: 'text', required: true, full: true },
@@ -688,9 +933,6 @@ const FORMS = {
     { name: 'body', label: 'Note', type: 'textarea', full: true, rows: 8 }
   ]}
 };
-function linkOptions() {
-  return [...state.goals.map(g => ['goal:' + g.id, 'Goal: ' + g.title]), ...state.projects.map(p => ['project:' + p.id, 'Project: ' + p.title])];
-}
 
 function fieldHTML(f, val) {
   const id = 'f-' + f.name, cls = f.full ? 'full' : 'half';
@@ -722,10 +964,7 @@ function openForm(type, id = null, preset = {}) {
   if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
   setTimeout(() => $('#dlg-body input, #dlg-body textarea, #dlg-body select')?.focus(), 30);
 }
-function closeForm() {
-  const dlg = $('#dlg');
-  if (dlg.open) { typeof dlg.close === 'function' ? dlg.close() : dlg.removeAttribute('open'); }
-}
+function closeForm() { const dlg = $('#dlg'); if (dlg.open) { typeof dlg.close === 'function' ? dlg.close() : dlg.removeAttribute('open'); } }
 $('#dlg').addEventListener('close', () => { dlgCtx = null; if (lastOpener && document.contains(lastOpener)) lastOpener.focus(); });
 $('#dlg-cancel').addEventListener('click', closeForm);
 
@@ -747,7 +986,6 @@ $('#dlg-form').addEventListener('submit', e => {
     else if (f.type === 'number') { const raw = (fd.get(f.name) ?? '').toString().trim(); vals[f.name] = raw === '' ? '' : Number(raw); }
     else vals[f.name] = (fd.get(f.name) ?? '').toString().trim();
   });
-  // Type-specific transforms
   if (type === 'goal' && !id) {
     vals.milestones = (vals.milestonesText || '').split('\n').map(s => s.trim()).filter(Boolean).map(title => ({ id: uid(), title, done: false }));
     delete vals.milestonesText;
@@ -759,16 +997,13 @@ $('#dlg-form').addEventListener('submit', e => {
     if (!prev || JSON.stringify(prev.steps) !== JSON.stringify(steps)) vals.stepLog = {};
     if (!vals.targetPerWeek) vals.targetPerWeek = vals.cadence === 'daily' ? 7 : 3;
   }
-  if (type === 'note') { const [lt, li] = (vals.link || '').split(':'); vals.linkType = lt || ''; vals.linkId = li || ''; delete vals.link; vals.updatedAt = nowISO(); }
-  if (type === 'task' && vals.recur !== 'none' && !vals.due) vals.due = today(); // a repeat needs an anchor date
+  if (type === 'note') { const [lt, li] = (vals.link || '').split(':'); vals.linkType = lt || ''; vals.linkId = li || ''; delete vals.link; }
+  if (type === 'task' && vals.recur !== 'none' && !vals.due) vals.due = today();
 
   let item;
-  if (id) { item = find(def.coll, id); Object.assign(item, vals, { updatedAt: nowISO() }); }
+  if (id) { item = find(def.coll, id); Object.assign(item, vals); }
   else {
-    const defaults = {
-      task: { done: false, completedAt: null }, goal: { status: 'active', milestones: [] }, habit: { log: [], stepLog: {} },
-      note: {}, event: {}, project: {}
-    }[type];
+    const defaults = { task: { done: false, completedAt: null }, goal: { status: 'active', milestones: [] }, habit: { log: [], stepLog: {} } }[type] || {};
     item = { id: uid(), createdAt: nowISO(), ...defaults, ...vals };
     state[def.coll].push(item);
   }
@@ -776,7 +1011,7 @@ $('#dlg-form').addEventListener('submit', e => {
   toast(`${cap(def.label)} ${id ? 'updated' : 'added'}: “${item.title || item.name}”.`);
 });
 
-/* Delete with Undo (and unlink references so nothing points at a ghost). */
+/* Delete with Undo; unlink references so nothing points at a ghost. */
 function removeItem(coll, id) {
   const idx = state[coll].findIndex(x => x.id === id); if (idx < 0) return;
   const [item] = state[coll].splice(idx, 1);
@@ -824,9 +1059,7 @@ function taskRow(t, opts = {}) {
       <button type="button" class="icon-btn" data-action="delete" data-coll="tasks" data-id="${t.id}" aria-label="Delete ${esc(t.title)}">Delete</button>
     </div></li>`;
 }
-function taskList(tasks, emptyText, opts) {
-  return tasks.length ? `<ul class="list">${tasks.map(t => taskRow(t, opts)).join('')}</ul>` : `<p class="empty">${emptyText}</p>`;
-}
+const taskList = (tasks, emptyText, opts) => tasks.length ? `<ul class="list">${tasks.map(t => taskRow(t, opts)).join('')}</ul>` : `<p class="empty">${emptyText}</p>`;
 function eventRow(e, showDate = false) {
   return `<li class="event"><time datetime="${e.date}${e.time ? 'T' + e.time : ''}">${showDate ? esc(fmtDate(e.date, { weekday: 'short', day: 'numeric' })) + '<br>' : ''}${e.time ? esc(fmtTime(e.time)) : 'All day'}</time>
     <div class="grow"><strong>${esc(e.title)}</strong>${e.location ? `<div class="small muted">${esc(e.location)}</div>` : ''}${e.notes ? `<div class="small muted">${esc(e.notes)}</div>` : ''}</div>
@@ -877,7 +1110,7 @@ function renderToday() {
           <div class="field" data-kinds="task" ${qk === 'task' ? '' : 'hidden'}><label for="qa-pri">Priority</label><select id="qa-pri" name="priority"><option value="high">High</option><option value="medium" selected>Medium</option><option value="low">Low</option></select></div>
           <button type="submit" class="btn btn-primary">Add</button>
         </div>
-        <p class="help" style="margin-top:8px">Need more detail (category, repeat, project)? Use <button type="button" class="btn-link" data-action="new" data-type="task">full task form</button> or press <kbd>N</kbd>.</p>
+        <p class="help" style="margin-top:8px">Need more detail (category, repeat, project)? Use the <button type="button" class="btn-link" data-action="new" data-type="task">full task form</button> or press <kbd>N</kbd>.</p>
       </form>
     </section>
 
@@ -939,13 +1172,12 @@ function renderToday() {
 
 function renderTasks() {
   const t0 = today(), q = ui.taskSearch.toLowerCase();
-  let list = state.tasks.filter(t =>
+  const list = state.tasks.filter(t =>
     (!ui.taskCat || t.category === ui.taskCat) &&
     (!ui.taskProject || t.projectId === ui.taskProject) &&
     (!ui.taskPriority || t.priority === ui.taskPriority) &&
     (!q || (t.title + ' ' + (t.notes || '')).toLowerCase().includes(q)));
-  const v = ui.taskView;
-  const groups = [];
+  const v = ui.taskView, groups = [];
   const openL = list.filter(t => !t.done).sort(sortTasks);
   const G = (key, title, items, cls = '') => items.length && groups.push({ key, title, items, cls });
   if (v === 'open' || v === 'all') {
@@ -995,7 +1227,7 @@ function renderCalendar() {
     const label = `${fmtLong(iso)}${iso === t0 ? ', today' : ''}: ${plural(ev.length, 'event')}, ${plural(tk.length, 'task')} due`;
     return `<td><button type="button" class="cal-day ${inM ? '' : 'out'} ${iso === t0 ? 'is-today' : ''}" data-action="cal-select" data-date="${iso}" aria-pressed="${iso === ui.calSelected}" tabindex="${iso === ui.calSelected ? 0 : -1}" aria-label="${esc(label)}">
       <span class="dnum" aria-hidden="true">${parseISO(iso).getDate()}</span>
-      <span aria-hidden="true">${items.slice(0, 3).join('')}${items.length > 3 ? `<span class="cal-item tk">+${items.length - 3} more</span>` : ''}</span>
+      <span aria-hidden="true" style="display:block;width:100%">${items.slice(0, 3).join('')}${items.length > 3 ? `<span class="cal-item tk">+${items.length - 3} more</span>` : ''}</span>
       <span class="dots" aria-hidden="true">${ev.slice(0, 3).map(() => '<i></i>').join('')}${tk.slice(0, 3).map(() => '<i class="tk"></i>').join('')}</span></button></td>`;
   };
   const sd = ui.calSelected, selEv = eventsOn(sd), selTk = dueOn(sd);
@@ -1031,7 +1263,7 @@ function renderCalendar() {
 
 function goalCard(g) {
   const p = goalProgress(g), na = goalNextAction(g), pace = goalPace(g);
-  const linked = state.tasks.filter(t => t.goalId === g.id), openLinked = linked.filter(t => !t.done).sort(sortTasks);
+  const openLinked = state.tasks.filter(t => t.goalId === g.id && !t.done).sort(sortTasks);
   const notes = state.notes.filter(n => n.linkType === 'goal' && n.linkId === g.id).length;
   const hasMeasure = g.measureTarget !== '' && g.measureTarget != null;
   const focusThisWeek = g.focusWeekOf === startOfWeek(today());
@@ -1176,7 +1408,7 @@ function renderReview() {
   const completed = state.tasks.filter(t => t.done && isoOfTimestamp(t.completedAt) >= ws && isoOfTimestamp(t.completedAt) <= we);
   const checkins = state.habits.reduce((n, h) => n + h.log.filter(d => d >= ws && d <= we).length, 0);
   const overdue = openTasks().filter(t => taskStatus(t) === 'overdue').sort(sortTasks);
-  const nextWeek = startOfWeek(addDays(ws, 7));
+  const nextWeek = addDays(ws, 7);
   const goals = state.goals.filter(g => g.status === 'active');
   const past = state.reviews.filter(r => r.weekOf !== ws).sort((a, b) => b.weekOf.localeCompare(a.weekOf));
   const ta = (name, label, help) => `<div class="field full"><label for="rv-${name}">${label}</label><textarea id="rv-${name}" name="${name}" rows="3" ${help ? `aria-describedby="rv-${name}-h"` : ''}>${esc(existing[name] || '')}</textarea>${help ? `<p class="help" id="rv-${name}-h">${help}</p>` : ''}</div>`;
@@ -1217,22 +1449,71 @@ function renderReview() {
   </div>`;
 }
 
+function renderSyncCard() {
+  const c = Sync.cfg, ok = Sync.supported(), signed = Sync.signedIn();
+  return `<section class="card span-2" aria-labelledby="sync-h">
+    <h2 id="sync-h">OneDrive sync</h2>
+    <div id="sync-status" aria-live="polite">${Sync.statusHTML()}</div>
+    ${!ok ? `<p class="notice err" style="margin-top:10px">Sync can’t run here because this page was opened as a local file (${esc(location.protocol)}). Microsoft sign-in needs the dashboard served from an <strong>https://</strong> address (or <code>http://localhost</code> for testing). The rest of the dashboard still works.</p>` : ''}
+    <div class="grid cols-2" style="margin-top:14px">
+      <div>
+        <h3>Connection</h3>
+        <form data-form="client-id" class="stack">
+          <div class="field"><label for="cid">Application (client) ID</label>
+            <input type="text" id="cid" name="clientId" value="${esc(c.clientId || '')}" placeholder="00000000-0000-0000-0000-000000000000" autocomplete="off" spellcheck="false" pattern="[0-9a-fA-F\\-]{36}" aria-describedby="cid-h">
+            <p class="help" id="cid-h">From your app registration’s Overview page. It’s a public identifier, not a password. It’s saved in this browser only, so enter it once on each device.</p></div>
+          <button type="submit" class="btn btn-sm">Save client ID</button>
+        </form>
+        <div class="toolbar" style="margin-top:14px">
+          ${signed ? `<button type="button" class="btn btn-primary" data-action="sync-now">Sync now</button><button type="button" class="btn" data-action="sync-signout">Sign out</button>`
+            : `<button type="button" class="btn btn-primary" data-action="sync-signin" ${ok && c.clientId ? '' : 'disabled aria-disabled="true"'}>Sign in with Microsoft</button>`}
+        </div>
+      </div>
+      <div>
+        <h3>Redirect URI for your app registration</h3>
+        <p class="small">Add this exact address under <strong>Authentication → Single-page application</strong>. Each address you open the dashboard from needs its own entry.</p>
+        <p><code id="redir">${esc(Sync.redirectUri())}</code></p>
+        <button type="button" class="btn btn-sm" data-action="copy-redirect">Copy redirect URI</button>
+      </div>
+    </div>
+    <details style="margin-top:14px"><summary>How sync works and its limits</summary>
+      <ul class="small">
+        <li>Your data is stored as <code>Apps/&lt;your app name&gt;/lifehub-data.json</code> in your personal OneDrive. The app can only access that folder, not your other files.</li>
+        <li>It syncs when you open the dashboard, when you return to the tab, every 3 minutes while it’s open, and a few seconds after each change.</li>
+        <li>Each item merges separately and the newest edit wins. If the same item is edited on two devices before either syncs, the later edit is kept.</li>
+        <li>Works offline, then catches up when you reconnect. Sign-in usually lasts about a day of inactivity before you need to select “Sign in” again. Your local data is never lost when that happens.</li>
+        <li>Sign-in details are stored in this browser’s local storage. They’re never included in exports.</li>
+      </ul></details>
+    <details><summary>Troubleshooting</summary>
+      <ul class="small">
+        <li><strong>“redirect_uri is not valid” / AADSTS50011:</strong> the address shown above must match a Single-page application redirect URI exactly, including any trailing slash or <code>index.html</code>.</li>
+        <li><strong>“unauthorized_client” or the account is not allowed:</strong> the app registration’s supported account types must include personal Microsoft accounts.</li>
+        <li><strong>403 Access denied:</strong> confirm <code>Files.ReadWrite.AppFolder</code> is added under API permissions. If it continues, temporarily add <code>Files.ReadWrite</code>, sign in once, then remove it. This is a known quirk when the app folder is first created.</li>
+        <li><strong>Blocked on a work computer:</strong> your organisation may block personal Microsoft account sign-in. Use the dashboard on your personal devices, or use export/import.</li>
+      </ul></details>
+  </section>`;
+}
+
 function renderData() {
   const json = JSON.stringify(state), kb = (new Blob([json]).size / 1024).toFixed(1);
   const counts = COLLECTIONS.map(c => `${state[c].length} ${c}`).join(' · ');
+  const signed = Sync.signedIn();
   return `
   <div class="page-head"><div><h1>Data &amp; sync</h1><p>Where your data lives and how to move it between devices.</p></div></div>
   <div class="grid cols-2">
     <section class="card span-2" aria-labelledby="loc-h">
-      <h2 id="loc-h">Your data is stored on this device only</h2>
-      <p class="notice">Everything you enter is saved in this browser’s <strong>local storage</strong> on this device. It does <strong>not sync</strong> to your phone, tablet or other computers, and no data is sent anywhere. Each browser and device keeps its own separate copy. Clearing browser data, using private browsing, or some device-management policies can remove it, so <strong>export a backup regularly</strong>.</p>
+      <h2 id="loc-h">${signed ? 'Your data: this device + your OneDrive' : 'Your data is stored on this device only'}</h2>
+      ${signed ? `<p class="notice ok">Everything is saved in this browser first, so it works offline, and then synced to your personal OneDrive. Other devices signed in to the same Microsoft account get the same data.</p>`
+        : `<p class="notice">Everything you enter is saved in this browser’s <strong>local storage</strong> on this device. It does <strong>not sync</strong> to your other devices unless you set up OneDrive sync below. Clearing browser data or using private browsing can remove it, so <strong>export a backup regularly</strong>.</p>`}
       <div class="stats" style="margin-top:14px">
         <div class="stat"><b>${kb} KB</b><span class="small muted">stored</span></div>
-        <div class="stat"><b>${state.meta.updatedAt ? esc(new Date(state.meta.updatedAt).toLocaleString('en-AU', { dateStyle: 'medium', timeStyle: 'short' })) : '—'}</b><span class="small muted">last saved</span></div>
+        <div class="stat"><b>${state.meta.updatedAt ? esc(fmtStamp(state.meta.updatedAt)) : '—'}</b><span class="small muted">last saved</span></div>
         <div class="stat"><b>${state.meta.lastExport ? esc(fmtDate(isoOfTimestamp(state.meta.lastExport), { day: 'numeric', month: 'short' })) : 'Never'}</b><span class="small muted">last export</span></div>
       </div>
       <p class="small muted" style="margin-top:10px">${esc(counts)}${storageOK ? '' : ' · <strong>Warning:</strong> saving is currently failing in this browser.'}</p>
     </section>
+
+    ${renderSyncCard()}
 
     <section class="card" aria-labelledby="bk-h"><h2 id="bk-h">Back up or move your data</h2>
       <p>Export a JSON file, then import it on another device. Importing replaces or merges with that device’s data.</p>
@@ -1240,14 +1521,14 @@ function renderData() {
       <form data-form="import" class="stack">
         <div class="field"><label for="imp-file">Import a backup file (.json)</label><input type="file" id="imp-file" name="file" accept="application/json,.json" required></div>
         <fieldset style="border:0;padding:0;margin:12px 0 0"><legend class="label">When importing</legend>
-          <div class="field-check field" style="margin:6px 0"><input type="radio" id="imp-merge" name="mode" value="merge" checked style="width:20px;height:20px"><label for="imp-merge">Merge — add new items and update items that changed more recently</label></div>
-          <div class="field-check field"><input type="radio" id="imp-rep" name="mode" value="replace" style="width:20px;height:20px"><label for="imp-rep">Replace everything on this device</label></div></fieldset>
+          <div class="field-check field" style="margin:6px 0"><input type="radio" id="imp-merge" name="mode" value="merge" checked style="width:20px;height:20px"><label for="imp-merge">Merge — add new items and keep the newest version of each</label></div>
+          <div class="field-check field"><input type="radio" id="imp-rep" name="mode" value="replace" style="width:20px;height:20px"><label for="imp-rep">Replace everything on this device${signed ? ' (and on your other synced devices)' : ''}</label></div></fieldset>
         <button type="submit" class="btn">Import</button>
       </form>
     </section>
 
     <section class="card" aria-labelledby="st-h"><h2 id="st-h">Storage and settings</h2>
-      <p class="small">Ask the browser to keep this data even when space is low (supported in most modern browsers when the page is served over HTTPS).</p>
+      <p class="small">Ask the browser to keep this data even when space is low. Most modern browsers support this over https.</p>
       <button type="button" class="btn btn-sm" data-action="persist">Request persistent storage</button>
       <h3 class="group-title" style="margin-top:18px">Categories</h3>
       <div class="meta">${state.settings.categories.map(c => `<span class="chip">${esc(c)} <button type="button" class="icon-btn" style="min-height:22px;min-width:22px;padding:0 4px" data-action="cat-del" data-cat="${esc(c)}" aria-label="Remove category ${esc(c)}">×</button></span>`).join('')}</div>
@@ -1257,17 +1538,7 @@ function renderData() {
       <h3 class="group-title" style="margin-top:18px">Reset</h3>
       <div class="toolbar"><button type="button" class="btn btn-sm" data-action="start-fresh">Start fresh (empty)</button>
         <button type="button" class="btn btn-sm" data-action="load-sample">Reload sample data</button></div>
-      <p class="help" style="margin-top:6px">Both ask for confirmation. Export first if you want to keep anything.</p>
-    </section>
-
-    <section class="card span-2" aria-labelledby="sync-h"><h2 id="sync-h">Cross-device sync — not set up</h2>
-      <p>Real sync needs a <strong>shared backend</strong> and <strong>sign-in</strong>, so only you can read your data. That isn’t built in yet. Until it is, the export/import above is the way to move data between devices.</p>
-      <div class="table-scroll"><table class="simple"><thead><tr><th scope="col">Option</th><th scope="col">What you would need to set up</th><th scope="col">Notes</th></tr></thead><tbody>
-        <tr><td><strong>Supabase</strong><br><span class="small muted">Postgres + Auth</span></td><td>Free Supabase account and project; email magic-link sign-in turned on; one table with Row Level Security (“a user can only read and write their own row”); the page hosted on HTTPS (e.g. GitHub Pages, Netlify, Cloudflare Pages).</td><td>The project URL and public “anon” key are designed to be public. Row Level Security is what protects the data. No server secrets go in the HTML.</td></tr>
-        <tr><td><strong>Firebase</strong><br><span class="small muted">Firestore + Auth</span></td><td>Google account; Firebase project; Authentication (Google or email link); Firestore with security rules limiting each document to its owner; HTTPS hosting (Firebase Hosting works).</td><td>The web config is a set of public identifiers. Security rules do the protecting.</td></tr>
-        <tr><td><strong>OneDrive</strong><br><span class="small muted">Microsoft Graph</span></td><td>A personal Microsoft account; an app registration (single-page app, PKCE, no client secret) with permission to its own app folder; HTTPS hosting with a matching redirect URL.</td><td>Stores one JSON file in your OneDrive app folder. A managed work tenant will usually block personal app consent, so use a personal account.</td></tr>
-        <tr><td><strong>Manual (current)</strong></td><td>None.</td><td>Export on one device, then import on another. Works today, but you have to do it by hand.</td></tr>
-      </tbody></table></div>
+      <p class="help" style="margin-top:6px">Both ask for confirmation.${signed ? ' While sync is on, a reset also applies to your other devices.' : ''} Export first if you want to keep anything.</p>
     </section>
   </div>`;
 }
@@ -1289,7 +1560,6 @@ const VIEWS = {
 const VIEW_KEYS = Object.keys(VIEWS);
 const currentView = () => { const h = location.hash.slice(1); return VIEWS[h] ? h : 'today'; };
 const main = $('#main');
-
 const focusKey = el => [el.tagName, el.id, el.dataset.action, el.dataset.id, el.dataset.date, el.dataset.step, el.dataset.ms, el.dataset.filter, el.dataset.dir].join('|');
 
 function renderNav(v) {
@@ -1297,12 +1567,17 @@ function renderNav(v) {
   $('#nav').innerHTML = VIEW_KEYS.map((k, i) => `<a href="#${k}" ${k === v ? 'aria-current="page"' : ''} title="${state.settings.shortcuts ? 'Shortcut: ' + (i + 1) : ''}">${esc(VIEWS[k].label)}${k === 'tasks' && od ? `<span class="count" aria-label="${od} overdue">${od}</span>` : ''}</a>`).join('');
 }
 function render() {
+  if (!main) return;
   const v = currentView();
   const ae = document.activeElement;
   let key = null, caret = null;
   if (ae && main.contains(ae) && ae !== main) { key = focusKey(ae); try { caret = ae.selectionStart; } catch (_) { caret = null; } }
+  // Don't clobber a half-typed input during a background sync re-render.
+  const typing = ae && main.contains(ae) && /^(INPUT|TEXTAREA)$/.test(ae.tagName) && !/checkbox|radio/.test(ae.type) && ae.value && ae.dataset.filter === undefined;
+  if (typing && Sync.status.state === 'syncing') return;
   main.innerHTML = VIEWS[v].render();
   renderNav(v);
+  Sync.updateBadge();
   document.title = `${VIEWS[v].label} · Life Hub`;
   if (key) {
     const el = [...main.querySelectorAll('input,button,select,textarea,a')].find(x => focusKey(x) === key);
@@ -1313,7 +1588,7 @@ function render() {
 window.addEventListener('hashchange', () => { render(); main.focus({ preventScroll: true }); window.scrollTo(0, 0); });
 
 /* =====================================================================
-   TOASTS (polite live region; optional Undo action)
+   TOASTS
    ===================================================================== */
 function toast(msg, opts = {}) {
   const box = $('#toasts'), el = document.createElement('div');
@@ -1342,7 +1617,7 @@ document.addEventListener('click', e => {
   const a = el.dataset.action, id = el.dataset.id;
   switch (a) {
     case 'toggle-task': toggleTask(id); break;
-    case 'focus-task': { const t = find('tasks', id); t.focus = !t.focus; save(); render(); toast(t.focus ? `Added to today’s focus.` : 'Removed from focus.'); break; }
+    case 'focus-task': { const t = find('tasks', id); t.focus = !t.focus; save(); render(); toast(t.focus ? 'Added to today’s focus.' : 'Removed from focus.'); break; }
     case 'snooze': { const t = find('tasks', id); t.due = addDays(today(), 1); save(); render(); toast(`Moved “${t.title}” to tomorrow.`); break; }
     case 'reschedule': { const t = find('tasks', id); t.due = el.dataset.to; if (!t.due) t.recur = 'none'; save(); render(); toast(t.due ? `Rescheduled to ${fmtDate(t.due)}.` : 'Due date removed.'); break; }
     case 'new': openForm(el.dataset.type, null, presetFrom(el)); break;
@@ -1367,8 +1642,14 @@ document.addEventListener('click', e => {
       break;
     case 'cat-del': { const c = el.dataset.cat; state.settings.categories = state.settings.categories.filter(x => x !== c); save(); render(); toast(`Removed category “${c}”. Existing items keep their label.`); break; }
     case 'toggle-shortcuts': state.settings.shortcuts = el.checked; save(); toast(el.checked ? 'Shortcuts on.' : 'Shortcuts off.'); break;
-    case 'start-fresh': if (confirm('Delete all data on this device and start with an empty dashboard? This cannot be undone. Export first if unsure.')) { const s = emptyState(); s.settings = state.settings; state = s; save(); render(); toast('Started fresh. Your categories were kept.'); } break;
-    case 'load-sample': if (confirm('Replace all data on this device with sample data?')) { state = sampleData(); save(); render(); toast('Sample data loaded.'); } break;
+    case 'start-fresh': if (confirm('Delete all data and start with an empty dashboard?' + (Sync.signedIn() ? ' This also clears it on your other synced devices.' : '') + ' Export first if unsure.')) { const s = emptyState(); s.settings = state.settings; s.meta.deleted = state.meta.deleted; state = s; save(); render(); toast('Started fresh. Your categories were kept.'); } break;
+    case 'load-sample': if (confirm('Replace all data with sample data?' + (Sync.signedIn() ? ' This also applies to your other synced devices.' : ''))) { const s = sampleData(); s.meta.deleted = state.meta.deleted; state = s; save(); render(); toast('Sample data loaded.'); } break;
+    case 'sync-signin': Sync.signIn(); break;
+    case 'sync-signout': Sync.signOut(); render(); break;
+    case 'sync-now': Sync.syncNow(); break;
+    case 'copy-redirect':
+      (navigator.clipboard ? navigator.clipboard.writeText(Sync.redirectUri()) : Promise.reject()).then(() => toast('Redirect URI copied.'), () => toast('Copy failed — select the address and copy it manually.'));
+      break;
   }
 });
 
@@ -1382,7 +1663,7 @@ document.addEventListener('submit', e => {
       const text = (fd.get('text') || '').toString().trim(); if (!text) return;
       const k = ui.qaKind, date = (fd.get('date') || '').toString(), time = (fd.get('time') || '').toString();
       if (k === 'event') state.events.push({ id: uid(), title: text, date: date || today(), time, endTime: '', location: '', notes: '', createdAt: nowISO() });
-      else if (k === 'note') state.notes.push({ id: uid(), title: text.length > 60 ? text.slice(0, 57) + '…' : text, body: text, kind: 'note', linkType: '', linkId: '', createdAt: nowISO(), updatedAt: nowISO() });
+      else if (k === 'note') state.notes.push({ id: uid(), title: text.length > 60 ? text.slice(0, 57) + '…' : text, body: text, kind: 'note', linkType: '', linkId: '', createdAt: nowISO() });
       else state.tasks.push({ id: uid(), title: text, due: k === 'reminder' ? (date || today()) : date, time: k === 'reminder' ? time : '', priority: k === 'task' ? (fd.get('priority') || 'medium') : 'medium', category: '', recur: 'none', projectId: '', goalId: '', reminder: k === 'reminder', focus: false, notes: '', done: false, completedAt: null, createdAt: nowISO() });
       save(); render(); $('#qa-text')?.focus();
       toast(`${cap(k)} added: “${text}”.`);
@@ -1394,16 +1675,15 @@ document.addEventListener('submit', e => {
     case 'cat-add': { const c = fd.get('cat').toString().trim(); if (c && !state.settings.categories.includes(c)) { state.settings.categories.push(c); save(); render(); toast(`Category “${c}” added.`); } $('#cat-new')?.focus(); break; }
     case 'import': { const file = fd.get('file'); if (file && file.size) importData(file, fd.get('mode')); break; }
     case 'review': saveReview(fd); break;
+    case 'client-id': { Sync.setClientId((fd.get('clientId') || '').toString()); render(); toast('Client ID saved in this browser.'); break; }
   }
 });
 
-/* Filters + quick-add type switch (no full re-render for typing in quick add) */
 document.addEventListener('change', e => {
   const el = e.target;
   if (el.name === 'kind' && el.closest('[data-form="quick"]')) {
     ui.qaKind = el.value;
-    const form = el.form;
-    form.querySelectorAll('[data-kinds]').forEach(fld => fld.hidden = !fld.dataset.kinds.split(',').includes(el.value));
+    el.form.querySelectorAll('[data-kinds]').forEach(fld => fld.hidden = !fld.dataset.kinds.split(',').includes(el.value));
     const labels = { task: ['Task', 'e.g. Book car service'], event: ['Event', 'e.g. Dentist appointment'], reminder: ['Remind me to…', 'e.g. Put bins out'], note: ['Note or idea', 'Capture a thought…'] };
     $('#qa-text-label').textContent = labels[el.value][0]; $('#qa-text').placeholder = labels[el.value][1];
     const d = $('#qa-date'); if (d && !d.value && el.value !== 'task') d.value = today();
@@ -1433,7 +1713,6 @@ document.addEventListener('keydown', e => {
     }
     return;
   }
-  // Single-key shortcuts — can be switched off in Data & sync (WCAG 2.1.4).
   if (!state.settings.shortcuts || e.ctrlKey || e.metaKey || e.altKey) return;
   const tag = (e.target.tagName || '').toLowerCase();
   if (['input', 'textarea', 'select'].includes(tag) || e.target.isContentEditable || $('#dlg').open) return;
@@ -1450,11 +1729,10 @@ function saveReview(fd) {
   let r = state.reviews.find(x => x.weekOf === ws);
   if (!r) { r = { id: uid(), weekOf: ws, createdAt: nowISO() }; state.reviews.push(r); }
   ['wins', 'challenges', 'learned', 'nextSteps'].forEach(k => r[k] = (fd.get(k) || '').toString().trim());
-  r.updatedAt = nowISO();
   let made = 0;
   if (fd.has('makeTasks')) {
     r.nextSteps.split('\n').map(s => s.trim()).filter(Boolean).forEach(title => {
-      if (state.tasks.some(t => !t.done && t.title === title)) return; // avoid duplicates on re-save
+      if (state.tasks.some(t => !t.done && t.title === title)) return;
       state.tasks.push({ id: uid(), title, due: nextWeek, time: '', priority: 'medium', category: 'Personal', recur: 'none', projectId: '', goalId: '', reminder: false, focus: false, notes: 'From weekly review', done: false, completedAt: null, createdAt: nowISO() });
       made++;
     });
@@ -1466,13 +1744,13 @@ function saveReview(fd) {
 }
 
 function exportData() {
-  const payload = { app: 'life-hub', exportedAt: nowISO(), ...state };
+  const payload = { ...shareable(state), exportedAt: nowISO() };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob); a.download = `lifehub-backup-${today()}.json`;
   document.body.appendChild(a); a.click();
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
-  state.meta.lastExport = nowISO(); save(); render();
+  state.meta.lastExport = nowISO(); persistLocal(); render();
   toast('Backup exported. Keep it somewhere safe, such as your personal cloud storage.');
 }
 
@@ -1483,37 +1761,32 @@ async function importData(file, mode) {
   const incoming = normalise(d);
   const total = COLLECTIONS.reduce((n, k) => n + incoming[k].length, 0);
   if (mode === 'replace') {
-    if (!confirm(`Replace everything on this device with ${total} items from “${file.name}”?`)) return;
-    incoming.meta.isSample = false; state = incoming;
+    if (!confirm(`Replace everything with ${total} items from “${file.name}”?`)) return;
+    const keep = { deleted: state.meta.deleted, lastExport: state.meta.lastExport };
+    state = incoming; Object.assign(state.meta, keep, { isSample: false });
+    // Force fresh timestamps so the replacement wins on other synced devices.
+    stampChanges();
+    const now = nowISO();
+    for (const k of COLLECTIONS) state[k].forEach(x => { x.updatedAt = now; });
+    takeSnapshot(); state.meta.updatedAt = now; persistLocal(); Sync.schedule();
+    render(); toast(`Imported ${total} items.`);
   } else {
-    // Merge by id; the incoming copy wins only if it was updated more recently.
-    let added = 0, updated = 0;
-    for (const k of COLLECTIONS) {
-      const map = new Map(state[k].map(x => [x.id, x]));
-      incoming[k].forEach(x => {
-        const cur = map.get(x.id);
-        if (!cur) { state[k].push(x); added++; }
-        else if ((x.updatedAt || x.completedAt || x.createdAt || '') > (cur.updatedAt || cur.completedAt || cur.createdAt || '')) { Object.assign(cur, x); updated++; }
-      });
-    }
-    incoming.settings.categories.forEach(c => { if (!state.settings.categories.includes(c)) state.settings.categories.push(c); });
+    const r = mergeInto(state, incoming);
     state.meta.isSample = false;
-    save(); render(); toast(`Merged: ${added} added, ${updated} updated.`); return;
+    save(); render(); toast(`Merged: ${r.added} added, ${r.updated} updated${r.removed ? `, ${r.removed} removed` : ''}.`);
   }
-  save(); render(); toast(`Imported ${total} items.`);
 }
 
 /* Keep multiple tabs on the same device consistent. */
 window.addEventListener('storage', e => {
-  if (e.key === STORAGE_KEY && e.newValue) { try { state = normalise(JSON.parse(e.newValue)); render(); } catch (_) {} }
+  if (e.key === STORAGE_KEY && e.newValue) { try { state = normalise(JSON.parse(e.newValue)); takeSnapshot(); render(); } catch (_) {} }
 });
-/* Refresh "today" if the tab is left open overnight. */
 let lastDay = today();
-document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && today() !== lastDay) { lastDay = today(); render(); }
-});
+document.addEventListener('visibilitychange', () => { if (!document.hidden && today() !== lastDay) { lastDay = today(); render(); } });
 
+/* ---------- Boot ---------- */
 render();
+Sync.handleRedirect().then(() => { if (Sync.signedIn()) Sync.syncNow(); });
 </script>
 </body>
 </html>
