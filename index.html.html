@@ -1,0 +1,1519 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Life Hub</title>
+<style>
+/* =========================================================
+   Design tokens — restrained palette, AA+ contrast in both themes
+   ========================================================= */
+:root{
+  --bg:#f6f5f2; --surface:#ffffff; --surface-2:#f1efea; --border:#dcd8cf;
+  --text:#1d2126; --muted:#535a64; --accent:#2b6a5c; --accent-ink:#ffffff; --accent-soft:#e2eeea;
+  --danger:#9f3127; --danger-soft:#f8e5e2; --warn:#7a5000; --warn-soft:#f7edd6;
+  --info:#2d5888; --info-soft:#e4ecf6;
+  --radius:14px; --radius-sm:8px;
+  --shadow:0 1px 2px rgba(20,20,20,.04),0 4px 14px rgba(20,20,20,.04);
+  --font:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --space:clamp(14px,2.2vw,24px);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#141619; --surface:#1c1f23; --surface-2:#23272c; --border:#343a41;
+    --text:#e9e7e3; --muted:#a9b0b8; --accent:#80c6b4; --accent-ink:#0f1a17; --accent-soft:#1f3530;
+    --danger:#f19a90; --danger-soft:#3a2220; --warn:#e5c178; --warn-soft:#3a3020;
+    --info:#9cc0ea; --info-soft:#1f2b3a;
+    --shadow:none;
+  }
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.55 var(--font)}
+h1,h2,h3{line-height:1.25;margin:0 0 .4em;font-weight:620;letter-spacing:-.01em}
+h1{font-size:clamp(1.5rem,2.6vw,1.95rem)}
+h2{font-size:1.08rem}
+h3{font-size:1rem}
+p{margin:0 0 .6em}
+a{color:var(--accent)}
+[hidden]{display:none!important}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
+.skip{position:absolute;left:12px;top:-60px;background:var(--accent);color:var(--accent-ink);padding:10px 14px;border-radius:8px;z-index:100}
+.skip:focus{top:12px}
+
+/* ---------- Layout ---------- */
+.app{min-height:100vh;display:flex;flex-direction:column}
+.sidebar{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--border)}
+.brand{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px var(--space) 4px}
+.brand strong{font-size:1.05rem}
+.local-badge{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;color:var(--warn);background:var(--warn-soft);padding:3px 9px;border-radius:999px;text-decoration:none;white-space:nowrap}
+.nav{display:flex;gap:4px;overflow-x:auto;padding:6px var(--space) 10px;scrollbar-width:thin}
+.nav a{flex:0 0 auto;text-decoration:none;color:var(--muted);padding:8px 12px;border-radius:10px;font-weight:520;font-size:.95rem}
+.nav a:hover{background:var(--surface-2);color:var(--text)}
+.nav a[aria-current="page"]{background:var(--accent-soft);color:var(--text)}
+.nav .count{font-size:.75rem;margin-left:6px;color:var(--danger);font-weight:650}
+main{flex:1;padding:var(--space);max-width:1240px;width:100%;margin:0 auto;outline:none}
+@media (min-width:980px){
+  .app{flex-direction:row}
+  .sidebar{width:236px;flex:0 0 236px;height:100vh;border-bottom:0;border-right:1px solid var(--border);display:flex;flex-direction:column}
+  .brand{flex-direction:column;align-items:flex-start;padding:22px 18px 12px}
+  .nav{flex-direction:column;overflow:visible;padding:6px 12px}
+  .nav a{padding:9px 12px}
+  .sidebar-foot{margin-top:auto;padding:16px 18px;font-size:.82rem;color:var(--muted)}
+}
+@media (max-width:979px){.sidebar-foot{display:none}}
+
+.page-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:var(--space)}
+.page-head p{color:var(--muted);margin:0}
+.grid{display:grid;gap:var(--space)}
+.cols-2{grid-template-columns:1fr}
+.cols-3{grid-template-columns:1fr}
+@media (min-width:760px){.cols-2{grid-template-columns:1fr 1fr}.cols-3{grid-template-columns:1fr 1fr}}
+@media (min-width:1180px){.cols-3{grid-template-columns:1fr 1fr 1fr}}
+.span-2{grid-column:1/-1}
+.stack>*+*{margin-top:var(--space)}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:var(--space);box-shadow:var(--shadow);min-width:0}
+.card-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px}
+.card-head h2,.card-head h3{margin:0}
+.muted{color:var(--muted)}
+.small{font-size:.86rem}
+.empty{color:var(--muted);padding:12px;border:1px dashed var(--border);border-radius:var(--radius-sm);background:var(--surface-2);font-size:.93rem}
+.notice{padding:12px 14px;border-radius:var(--radius-sm);background:var(--warn-soft);color:var(--text);border-left:4px solid var(--warn);font-size:.93rem}
+.notice.info{background:var(--info-soft);border-left-color:var(--info)}
+
+/* ---------- Controls ---------- */
+button,input,select,textarea{font:inherit;color:inherit}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:8px 14px;border-radius:10px;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-weight:550;text-decoration:none;color:var(--text)}
+.btn:hover{background:var(--surface-2)}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn-primary:hover{background:var(--accent);filter:brightness(1.08)}
+.btn-danger{color:var(--danger);border-color:currentColor;background:transparent}
+.btn-sm{min-height:34px;padding:5px 10px;font-size:.88rem}
+.btn-link{background:none;border:0;padding:4px 6px;color:var(--accent);cursor:pointer;font-weight:550;min-height:32px;border-radius:6px}
+.btn-link:hover{text-decoration:underline}
+.icon-btn{background:none;border:1px solid transparent;color:var(--muted);min-width:34px;min-height:34px;border-radius:8px;cursor:pointer;font-size:.86rem;padding:4px 8px}
+.icon-btn:hover{background:var(--surface-2);color:var(--text)}
+.icon-btn[aria-pressed="true"]{color:var(--warn)}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field label,.label{font-size:.86rem;font-weight:560;color:var(--muted)}
+input[type=text],input[type=search],input[type=date],input[type=time],input[type=number],select,textarea{
+  min-height:40px;padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:var(--surface);width:100%}
+textarea{resize:vertical;min-height:84px}
+input[type=checkbox]{width:20px;height:20px;accent-color:var(--accent);margin:0;flex:0 0 auto;cursor:pointer}
+.field-check{flex-direction:row;align-items:center;gap:10px}
+.field-check label{color:var(--text);font-weight:500;font-size:.95rem}
+.help{font-size:.82rem;color:var(--muted);margin:0}
+.form-grid{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:560px){.form-grid{grid-template-columns:1fr 1fr}.form-grid .full{grid-column:1/-1}}
+@media (max-width:559px){.form-grid .half{grid-column:auto}}
+
+/* Segmented radio (Quick add type) */
+.seg{position:relative;display:inline-flex;border:1px solid var(--border);border-radius:10px;padding:3px;gap:2px;margin:0 0 12px;background:var(--surface-2);flex-wrap:wrap}
+.seg input{position:absolute;opacity:0;width:1px;height:1px}
+.seg label{padding:6px 12px;border-radius:8px;cursor:pointer;font-size:.9rem;font-weight:550;color:var(--muted)}
+.seg input:checked+label{background:var(--surface);color:var(--text);box-shadow:var(--shadow);outline:1px solid var(--border)}
+.seg input:focus-visible+label{outline:3px solid var(--accent)}
+.qa-row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.qa-row .grow{flex:1 1 220px}
+.qa-row .field:not(.grow){flex:0 1 150px}
+
+/* ---------- Lists / rows ---------- */
+.list{list-style:none;margin:0;padding:0}
+.list>li+li{border-top:1px solid var(--border)}
+.task{display:flex;gap:12px;align-items:flex-start;padding:10px 2px}
+.task input[type=checkbox]{margin-top:3px}
+.task-main{flex:1;min-width:0}
+.task-title{display:block;font-weight:530;cursor:pointer;overflow-wrap:anywhere}
+.task.is-done .task-title{text-decoration:line-through;color:var(--muted)}
+.meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.row-actions{display:flex;gap:2px;flex:0 0 auto}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:.76rem;line-height:1.2;padding:3px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);border:1px solid transparent;white-space:nowrap}
+.chip.overdue{background:var(--danger-soft);color:var(--danger);font-weight:620}
+.chip.today{background:var(--warn-soft);color:var(--warn);font-weight:620}
+.chip.soon{background:var(--info-soft);color:var(--info)}
+.chip.high{color:var(--danger);border-color:var(--danger-soft)}
+.chip.accent{background:var(--accent-soft);color:var(--text)}
+.group-title{font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:18px 0 4px;font-weight:650}
+.group-title:first-child{margin-top:0}
+.group-title.overdue{color:var(--danger)}
+.nba{display:flex;gap:12px;align-items:flex-start;padding:10px 2px}
+.nba .why{font-size:.84rem;color:var(--muted)}
+.rank{flex:0 0 26px;height:26px;border-radius:50%;background:var(--accent-soft);display:grid;place-items:center;font-size:.8rem;font-weight:650}
+.event{display:flex;gap:12px;padding:9px 2px;align-items:flex-start}
+.event time{flex:0 0 64px;font-variant-numeric:tabular-nums;color:var(--muted);font-size:.9rem;padding-top:1px}
+.event .grow{flex:1;min-width:0}
+
+@media (max-width:560px){.task{flex-wrap:wrap}.task .task-main{flex:1 1 calc(100% - 40px)}.task .row-actions{width:100%;justify-content:flex-end;margin-top:-6px}}
+/* ---------- Progress ---------- */
+.progress{height:8px;background:var(--surface-2);border-radius:999px;overflow:hidden;border:1px solid var(--border)}
+.progress>span{display:block;height:100%;background:var(--accent);border-radius:999px}
+.progress-row{display:flex;align-items:center;gap:10px}
+.progress-row .progress{flex:1}
+.pct{font-variant-numeric:tabular-nums;font-weight:620;font-size:.9rem;min-width:3.2em;text-align:right}
+
+/* ---------- Goals / projects ---------- */
+.why-text{font-style:italic;color:var(--muted);border-left:3px solid var(--accent-soft);padding-left:10px;margin:8px 0 12px}
+.next-action{background:var(--accent-soft);border-radius:var(--radius-sm);padding:10px 12px;margin:12px 0;font-size:.93rem}
+.next-action strong{display:block;font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.ms{display:flex;align-items:center;gap:10px;padding:6px 0}
+.ms label{flex:1;cursor:pointer}
+.ms.done label{text-decoration:line-through;color:var(--muted)}
+.inline-form{display:flex;gap:8px;margin-top:8px;align-items:flex-end}
+.inline-form .field{flex:1}
+.card-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+details summary{cursor:pointer;color:var(--accent);font-weight:550;font-size:.9rem;padding:4px 0}
+
+/* ---------- Habits ---------- */
+.habit-grid{display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:4px;margin:10px 0 6px}
+.hday{aspect-ratio:1;min-height:26px;border-radius:7px;border:1px solid var(--border);background:var(--surface-2);cursor:pointer;font-size:.68rem;color:var(--muted);padding:0;display:grid;place-items:center;line-height:1}
+.hday[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.hday.is-today{outline:2px solid var(--text);outline-offset:1px}
+.habit-row{display:flex;align-items:center;gap:12px;padding:9px 2px}
+.habit-row .grow{flex:1;min-width:0}
+.check-btn{min-height:36px;border-radius:999px;padding:6px 14px;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-weight:550;font-size:.88rem;white-space:nowrap}
+.check-btn[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.encourage{font-size:.9rem;color:var(--muted)}
+
+/* ---------- Calendar ---------- */
+.cal-wrap{display:grid;gap:var(--space)}
+.cal-wrap>*,.grid>*{min-width:0}
+@media (min-width:1100px){.cal-wrap{grid-template-columns:minmax(0,1.6fr) minmax(280px,1fr)}}
+.cal{width:100%;border-collapse:separate;border-spacing:4px;table-layout:fixed}
+.cal th{font-size:.78rem;color:var(--muted);font-weight:600;padding:4px 0}
+.cal td{padding:0;vertical-align:top}
+.cal-day{width:100%;min-width:0;min-height:86px;text-align:left;border:1px solid var(--border);background:var(--surface);border-radius:10px;padding:6px;cursor:pointer;display:flex;flex-direction:column;gap:3px;overflow:hidden}
+.cal-day.out{opacity:.5}
+.cal-day.is-today .dnum{background:var(--accent);color:var(--accent-ink)}
+.cal-day[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
+.dnum{font-size:.8rem;font-weight:650;width:24px;height:24px;border-radius:50%;display:grid;place-items:center}
+.cal-item{font-size:.72rem;line-height:1.25;padding:1px 5px;border-radius:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.cal-item.ev{background:var(--info-soft);color:var(--info)}
+.cal-item.tk{background:var(--surface-2);color:var(--muted)}
+.cal-item.od{background:var(--danger-soft);color:var(--danger)}
+.dots{display:none;gap:3px}
+.dots i{width:6px;height:6px;border-radius:50%;background:var(--info);display:block}
+.dots i.tk{background:var(--muted)}
+@media (max-width:640px){
+  .cal{border-spacing:2px}
+  .cal-day{min-height:48px;padding:4px;align-items:center}
+  .cal-item{display:none}
+  .dots{display:flex}
+}
+
+/* ---------- Notes ---------- */
+.note-body{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.95rem}
+
+/* ---------- Dialog ---------- */
+dialog{border:1px solid var(--border);border-radius:var(--radius);padding:0;width:min(640px,calc(100vw - 24px));max-height:calc(100vh - 32px);background:var(--surface);color:var(--text);box-shadow:0 20px 60px rgba(0,0,0,.25)}
+dialog::backdrop{background:rgba(15,18,22,.45)}
+.dlg-inner{padding:var(--space);overflow:auto;max-height:calc(100vh - 34px)}
+.dlg-foot{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
+
+/* ---------- Toasts ---------- */
+.toasts{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;z-index:200;width:min(520px,calc(100vw - 24px))}
+.toast{display:flex;align-items:center;gap:12px;justify-content:space-between;background:var(--text);color:var(--bg);padding:11px 14px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.2);font-size:.93rem}
+.toast.error{background:var(--danger);color:#fff}
+.toast button{background:transparent;border:1px solid currentColor;color:inherit;border-radius:8px;padding:4px 10px;cursor:pointer;font-weight:600}
+
+table.simple{width:100%;border-collapse:collapse;font-size:.92rem}
+table.simple th,table.simple td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--border);vertical-align:top}
+table.simple th{color:var(--muted);font-weight:600;font-size:.82rem}
+.table-scroll{overflow-x:auto}
+.stat{display:flex;flex-direction:column}
+.stat b{font-size:1.6rem;font-variant-numeric:tabular-nums}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
+kbd{font:.8rem ui-monospace,Consolas,monospace;border:1px solid var(--border);border-bottom-width:2px;border-radius:5px;padding:1px 5px;background:var(--surface-2)}
+@media (prefers-reduced-motion:no-preference){.progress>span{transition:width .3s ease}}
+@media print{.sidebar,.toasts,.row-actions,.card-actions{display:none}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="app">
+  <header class="sidebar">
+    <div class="brand">
+      <strong>Life Hub</strong>
+      <a class="local-badge" href="#data" title="Your data is saved in this browser on this device only">● Device-local data</a>
+    </div>
+    <nav class="nav" id="nav" aria-label="Sections"></nav>
+    <div class="sidebar-foot">
+      <p>Shortcuts: <kbd>N</kbd> new task · <kbd>/</kbd> search tasks · <kbd>1</kbd>–<kbd>9</kbd> sections</p>
+    </div>
+  </header>
+  <main id="main" tabindex="-1" aria-live="off"></main>
+</div>
+
+<dialog id="dlg" aria-labelledby="dlg-title">
+  <form id="dlg-form" class="dlg-inner">
+    <h2 id="dlg-title">Edit</h2>
+    <div id="dlg-body" class="form-grid"></div>
+    <div class="dlg-foot">
+      <button type="button" class="btn" id="dlg-cancel">Cancel</button>
+      <button type="submit" class="btn btn-primary" id="dlg-save">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+<noscript><p style="padding:20px">Life Hub needs JavaScript to run.</p></noscript>
+
+<script>
+'use strict';
+/* =====================================================================
+   LIFE HUB — single-file personal dashboard
+   ---------------------------------------------------------------------
+   Architecture (deliberately simple, no build step):
+   • One `state` object holds all data. It is persisted to localStorage
+     on every change via save(). There is NO network code: nothing
+     leaves this device unless you export it.
+   • Each section has a render function that returns an HTML string.
+     All user text goes through esc() before being inserted, so imported
+     or typed content can never inject markup/script.
+   • Interaction uses event delegation: elements carry data-action /
+     data-form / data-filter attributes and a few document-level
+     listeners dispatch them. This keeps handlers working after re-render.
+   • After each re-render we restore keyboard focus to the "same"
+     control (see focusKey) so keyboard users don't lose their place.
+   • Dates are handled as local "YYYY-MM-DD" strings to avoid timezone
+     shifts that happen with Date#toISOString().
+   ===================================================================== */
+
+const STORAGE_KEY = 'lifehub.v1';
+const SCHEMA = 1;
+
+/* ---------- Small utilities ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const uid = () => (crypto && crypto.randomUUID) ? crypto.randomUUID() : 'id-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 9);
+const nowISO = () => new Date().toISOString();
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const plural = (n, w, p = w + 's') => `${n} ${n === 1 ? w : p}`;
+const clamp01 = n => Math.max(0, Math.min(1, n));
+
+/* ---------- Date helpers (local dates only) ---------- */
+const pad = n => String(n).padStart(2, '0');
+const toISO = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const parseISO = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const today = () => toISO(new Date());
+const addDays = (iso, n) => { const d = parseISO(iso); d.setDate(d.getDate() + n); return toISO(d); };
+const addMonths = (iso, n) => {
+  const d = parseISO(iso), day = d.getDate();
+  d.setDate(1); d.setMonth(d.getMonth() + n);
+  const last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  d.setDate(Math.min(day, last)); return toISO(d);
+};
+const diffDays = (a, b) => Math.round((parseISO(b) - parseISO(a)) / 86400000); // b − a, DST-safe via rounding
+const fmtDate = (iso, o = { weekday: 'short', day: 'numeric', month: 'short' }) => iso ? parseISO(iso).toLocaleDateString('en-AU', o) : '';
+const fmtLong = iso => fmtDate(iso, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+const fmtTime = t => { if (!t) return ''; const [h, m] = t.split(':').map(Number); const d = new Date(); d.setHours(h, m); return d.toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' }); };
+const startOfWeek = iso => { const d = parseISO(iso); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return toISO(d); }; // Monday
+const isoOfTimestamp = ts => ts ? toISO(new Date(ts)) : '';
+function relDate(iso) {
+  if (!iso) return '';
+  const n = diffDays(today(), iso);
+  if (n === 0) return 'Today';
+  if (n === 1) return 'Tomorrow';
+  if (n === -1) return 'Yesterday';
+  if (n < 0) return `${-n} days overdue`;
+  if (n < 7) return fmtDate(iso, { weekday: 'long' });
+  return fmtDate(iso);
+}
+function untilText(iso) {
+  if (!iso) return 'No target date';
+  const n = diffDays(today(), iso);
+  if (n < 0) return `Target was ${fmtDate(iso, { day: 'numeric', month: 'short', year: 'numeric' })}`;
+  if (n === 0) return 'Target is today';
+  if (n < 14) return `${plural(n, 'day')} to go`;
+  if (n < 70) return `${Math.round(n / 7)} weeks to go`;
+  return `${Math.round(n / 30.4)} months to go`;
+}
+
+/* =====================================================================
+   DATA: empty state, sample data, load/save
+   ===================================================================== */
+function emptyState() {
+  return {
+    meta: { schema: SCHEMA, createdAt: nowISO(), updatedAt: null, isSample: false, lastExport: null },
+    settings: { categories: ['Home', 'Health', 'Family', 'Finance', 'Learning', 'Admin', 'Personal'], shortcuts: true },
+    tasks: [], events: [], goals: [], habits: [], projects: [], notes: [], reviews: []
+  };
+}
+const COLLECTIONS = ['tasks', 'events', 'goals', 'habits', 'projects', 'notes', 'reviews'];
+
+/* Sample data is generated relative to today so the dashboard looks "live". */
+function sampleData() {
+  const s = emptyState(), t = today(), d = n => addDays(t, n);
+  s.meta.isSample = true;
+  const P = { garden: uid(), book: uid(), blog: uid() };
+  const G = { run: uid(), fund: uid(), read: uid() };
+  s.projects = [
+    { id: P.garden, title: 'Backyard veggie garden', outcome: 'Two raised beds planted with herbs and seasonal vegetables we actually eat.', targetDate: d(45), status: 'active', category: 'Home', createdAt: nowISO() },
+    { id: P.book, title: 'Family photo book', outcome: 'A printed photo book of the year, ready to give as Christmas gifts.', targetDate: d(60), status: 'active', category: 'Family', createdAt: nowISO() },
+    { id: P.blog, title: 'Blog content refresh', outcome: 'A six-week posting plan and three drafted posts ready to publish.', targetDate: d(30), status: 'active', category: 'Personal', createdAt: nowISO() }
+  ];
+  const yearEnd = `${new Date().getFullYear()}-12-31`;
+  s.goals = [
+    { id: G.run, title: 'Run a 10 km event', why: 'To feel strong, have more energy for the family, and prove I can train consistently around a busy schedule.', targetDate: d(120), area: 'Health', status: 'active',
+      measureLabel: 'Longest run (km)', measureStart: 3, measureCurrent: 6.5, measureTarget: 10, createdAt: new Date(Date.now() - 40 * 864e5).toISOString(),
+      milestones: [{ id: uid(), title: 'Run 5 km without stopping', done: true }, { id: uid(), title: 'Run 7 km', done: false }, { id: uid(), title: 'Register for an event', done: false }, { id: uid(), title: 'Run 10 km in training', done: false }] },
+    { id: G.fund, title: 'Build a $10,000 emergency fund', why: 'Peace of mind — unexpected bills should be an inconvenience, not a crisis.', targetDate: d(240), area: 'Finance', status: 'active',
+      measureLabel: 'Saved ($)', measureStart: 0, measureCurrent: 4200, measureTarget: 10000, createdAt: new Date(Date.now() - 90 * 864e5).toISOString(),
+      milestones: [{ id: uid(), title: 'Automate a fortnightly transfer', done: true }, { id: uid(), title: 'Reach $5,000', done: false }, { id: uid(), title: 'Reach $7,500', done: false }, { id: uid(), title: 'Reach $10,000', done: false }] },
+    { id: G.read, title: 'Read 12 books this year', why: 'Reading is how I rest and keep learning — I want it back in my week.', targetDate: yearEnd < t ? addMonths(t, 3) : yearEnd, area: 'Learning', status: 'active',
+      measureLabel: 'Books finished', measureStart: 0, measureCurrent: 7, measureTarget: 12, createdAt: new Date(Date.now() - 200 * 864e5).toISOString(), milestones: [] }
+  ];
+  const T = (o) => ({ id: uid(), notes: '', due: '', time: '', priority: 'medium', category: '', recur: 'none', projectId: '', goalId: '', reminder: false, focus: false, done: false, completedAt: null, createdAt: nowISO(), ...o });
+  s.tasks = [
+    T({ title: 'Pay electricity bill', due: d(2), priority: 'high', category: 'Finance', recur: 'monthly' }),
+    T({ title: 'Book car service', due: d(-1), category: 'Admin' }),
+    T({ title: 'Review subscriptions and cancel unused ones', due: d(-3), category: 'Finance', goalId: G.fund }),
+    T({ title: 'Meal plan and grocery order', due: t, category: 'Home', recur: 'weekly', focus: true }),
+    T({ title: 'Call Mum', due: d(1), time: '18:30', priority: 'low', category: 'Family', reminder: true }),
+    T({ title: 'Put bins out', due: t, time: '19:00', priority: 'low', category: 'Home', recur: 'weekly', reminder: true }),
+    T({ title: 'Gather documents for passport renewal', due: d(9), category: 'Admin' }),
+    T({ title: 'Saturday long run — 7 km', due: d(((6 - new Date().getDay()) + 7) % 7 || 7), category: 'Health', goalId: G.run, priority: 'high' }),
+    T({ title: 'Register for the 10 km event', due: d(6), category: 'Health', goalId: G.run, priority: 'high' }),
+    T({ title: 'Set up automatic savings transfer', category: 'Finance', goalId: G.fund, done: true, completedAt: new Date(Date.now() - 20 * 864e5).toISOString() }),
+    T({ title: 'Finish current book', priority: 'low', category: 'Learning', goalId: G.read }),
+    T({ title: 'Buy compost and seedling mix', due: d(3), category: 'Home', projectId: P.garden }),
+    T({ title: 'Sketch garden bed layout', category: 'Home', projectId: P.garden, done: true, completedAt: new Date(Date.now() - 2 * 864e5).toISOString() }),
+    T({ title: 'Measure fence line for second bed', priority: 'low', category: 'Home', projectId: P.garden }),
+    T({ title: 'Choose photos for January–June', due: d(5), category: 'Family', projectId: P.book }),
+    T({ title: 'Compare photo book printing services', priority: 'low', category: 'Family', projectId: P.book }),
+    T({ title: 'Draft three blog post outlines', due: d(7), category: 'Personal', projectId: P.blog }),
+    T({ title: 'List six weeks of post topics', category: 'Personal', projectId: P.blog, done: true, completedAt: new Date(Date.now() - 4 * 864e5).toISOString() }),
+    T({ title: 'Schedule dentist check-up', category: 'Health' })
+  ];
+  const nextSat = d(((6 - new Date().getDay()) + 7) % 7 || 7);
+  s.events = [
+    { id: uid(), title: 'Coffee with Sarah', date: t, time: '10:00', endTime: '11:00', location: 'Corner café', notes: '' },
+    { id: uid(), title: 'Swimming lessons', date: d(1), time: '16:30', endTime: '17:15', location: 'Aquatic centre', notes: 'Pack towels and goggles' },
+    { id: uid(), title: 'parkrun', date: nextSat, time: '07:00', endTime: '', location: 'Local park', notes: '' },
+    { id: uid(), title: "Jess's birthday dinner", date: d(5), time: '18:30', endTime: '21:00', location: 'Thai restaurant', notes: 'Gift: book voucher' },
+    { id: uid(), title: 'Car service drop-off', date: d(8), time: '08:00', endTime: '', location: '', notes: '' },
+    { id: uid(), title: 'Long weekend away', date: d(20), time: '', endTime: '', location: 'Sunshine Coast', notes: '' }
+  ];
+  const logFrom = arr => arr.map(n => d(-n));
+  s.habits = [
+    { id: uid(), name: 'Walk outside for 20 minutes', kind: 'habit', cadence: 'daily', targetPerWeek: 7, cue: 'After lunch, a loop around the block', paused: false, steps: [], stepLog: {}, log: logFrom([1, 2, 4, 5, 7, 8, 10, 12, 13]), createdAt: nowISO() },
+    { id: uid(), name: 'Read 10 pages', kind: 'habit', cadence: 'daily', targetPerWeek: 7, cue: 'In bed, before lights out', paused: false, steps: [], stepLog: {}, log: logFrom([0, 1, 3, 4, 6, 9, 11]), createdAt: nowISO() },
+    { id: uid(), name: 'Strength session', kind: 'habit', cadence: 'weekly', targetPerWeek: 2, cue: 'Tuesday and Thursday after work', paused: false, steps: [], stepLog: {}, log: logFrom([2, 6, 9]), createdAt: nowISO() },
+    { id: uid(), name: 'Evening wind-down', kind: 'routine', cadence: 'daily', targetPerWeek: 7, cue: 'Start at 9 pm', paused: false,
+      steps: ['Tidy the kitchen bench', 'Pack bags for tomorrow', 'Phone on charge outside the bedroom', 'Ten minutes of reading'], stepLog: { [t]: [0] }, log: logFrom([1, 2, 3, 5, 8, 9, 12]), createdAt: nowISO() }
+  ];
+  s.notes = [
+    { id: uid(), title: 'Garden plant list', kind: 'idea', linkType: 'project', linkId: P.garden, body: 'Herbs: basil, parsley, coriander, chives\nVeg: cherry tomatoes, lettuce, snow peas, zucchini\nCheck which grow well this season.', createdAt: nowISO(), updatedAt: nowISO() },
+    { id: uid(), title: 'Why I’m running', kind: 'journal', linkType: 'goal', linkId: G.run, body: 'Ran 6.5 km this weekend — the furthest yet. Slow is fine. The point is to keep turning up.', createdAt: new Date(Date.now() - 3 * 864e5).toISOString(), updatedAt: nowISO() },
+    { id: uid(), title: 'Gift ideas', kind: 'note', linkType: '', linkId: '', body: 'Jess — book voucher, nice candle\nMum — framed photo from the photo book project', createdAt: nowISO(), updatedAt: nowISO() },
+    { id: uid(), title: `Journal — ${fmtDate(d(-1))}`, kind: 'journal', linkType: '', linkId: '', body: 'What went well? Got the savings transfer automated.\n\nWhat felt hard? Evenings are rushed — the wind-down routine helps.\n\nWhat matters tomorrow? Meal plan and an early night.', createdAt: new Date(Date.now() - 864e5).toISOString(), updatedAt: nowISO() }
+  ];
+  s.reviews = [
+    { id: uid(), weekOf: startOfWeek(d(-7)), wins: 'Hit three walks and a 6.5 km run.', challenges: 'Two late nights threw out the routine.', learned: 'Planning meals on Sunday saves weeknight stress.', nextSteps: 'Register for 10 km event\nBook car service', createdAt: new Date(Date.now() - 6 * 864e5).toISOString() }
+  ];
+  return s;
+}
+
+/* Normalise anything loaded or imported into the current shape. */
+function normalise(d) {
+  const base = emptyState();
+  if (!d || typeof d !== 'object') return base;
+  base.meta = { ...base.meta, ...(d.meta || {}) };
+  base.settings = { ...base.settings, ...(d.settings || {}) };
+  if (!Array.isArray(base.settings.categories)) base.settings.categories = emptyState().settings.categories;
+  for (const k of COLLECTIONS) {
+    base[k] = Array.isArray(d[k]) ? d[k].filter(x => x && typeof x === 'object').map(x => ({ ...x, id: typeof x.id === 'string' && x.id ? x.id : uid() })) : [];
+  }
+  base.goals.forEach(g => { if (!Array.isArray(g.milestones)) g.milestones = []; });
+  base.habits.forEach(h => { if (!Array.isArray(h.log)) h.log = []; if (!Array.isArray(h.steps)) h.steps = []; if (!h.stepLog || typeof h.stepLog !== 'object') h.stepLog = {}; });
+  return base;
+}
+
+let storageOK = true;
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return normalise(JSON.parse(raw));
+  } catch (e) { console.warn('Could not read saved data', e); storageOK = false; }
+  const s = sampleData();
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch (e) { storageOK = false; }
+  return s;
+}
+function save() {
+  state.meta.updatedAt = nowISO();
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); storageOK = true; }
+  catch (e) { storageOK = false; toast('Could not save — browser storage may be full or disabled. Export a backup now.', { type: 'error' }); }
+}
+
+let state = load();
+
+/* UI-only state (not persisted) */
+const ui = {
+  qaKind: 'task',
+  taskView: 'open', taskCat: '', taskProject: '', taskPriority: '', taskSearch: '',
+  goalFilter: 'active', projectFilter: 'active',
+  noteKind: '', noteLink: '', noteSearch: '',
+  calMonth: today().slice(0, 8) + '01', calSelected: today()
+};
+
+/* =====================================================================
+   DOMAIN LOGIC
+   ===================================================================== */
+const find = (coll, id) => state[coll].find(x => x.id === id);
+const PRI = { high: 3, medium: 2, low: 1 };
+const openTasks = () => state.tasks.filter(t => !t.done);
+function sortTasks(a, b) {
+  const ad = a.due || '9999-12-31', bd = b.due || '9999-12-31';
+  if (ad !== bd) return ad < bd ? -1 : 1;
+  const pa = PRI[a.priority] || 2, pb = PRI[b.priority] || 2;
+  if (pa !== pb) return pb - pa;
+  if ((a.time || '') !== (b.time || '')) return (a.time || '99') < (b.time || '99') ? -1 : 1;
+  return a.title.localeCompare(b.title);
+}
+function taskStatus(t) {
+  if (t.done) return 'done';
+  if (!t.due) return 'nodate';
+  const n = diffDays(today(), t.due);
+  return n < 0 ? 'overdue' : n === 0 ? 'today' : n <= 7 ? 'soon' : 'later';
+}
+const byDateTime = (a, b) => (a.date + (a.time || '00:00')).localeCompare(b.date + (b.time || '00:00'));
+const eventsOn = iso => state.events.filter(e => e.date === iso).sort(byDateTime);
+
+function nextDue(iso, recur) {
+  switch (recur) {
+    case 'daily': return addDays(iso, 1);
+    case 'weekly': return addDays(iso, 7);
+    case 'fortnightly': return addDays(iso, 14);
+    case 'monthly': return addMonths(iso, 1);
+    default: return iso;
+  }
+}
+
+/* Recurring tasks: completing one creates the next instance.
+   Design decision: the next due date is calculated from the *due date*
+   (not completion date) to keep a stable rhythm, but it is rolled forward
+   past today so a long-overdue recurring task doesn't spawn another
+   overdue copy. Undoing the completion removes the untouched spawned copy. */
+function toggleTask(id) {
+  const t = find('tasks', id); if (!t) return;
+  if (!t.done) {
+    t.done = true; t.completedAt = nowISO(); t.focus = false;
+    let msg = `Completed “${t.title}”.`;
+    if (t.recur && t.recur !== 'none') {
+      let next = nextDue(t.due || today(), t.recur);
+      while (next <= today()) next = nextDue(next, t.recur);
+      const copy = { ...t, id: uid(), done: false, completedAt: null, due: next, createdAt: nowISO(), spawnedId: null };
+      state.tasks.push(copy); t.spawnedId = copy.id;
+      msg += ` Next one is due ${fmtDate(next)}.`;
+    }
+    save(); render();
+    toast(msg, { action: 'Undo', onAction: () => toggleTask(id) });
+  } else {
+    t.done = false; t.completedAt = null;
+    if (t.spawnedId) {
+      const sp = find('tasks', t.spawnedId);
+      if (sp && !sp.done) state.tasks = state.tasks.filter(x => x.id !== sp.id);
+      t.spawnedId = null;
+    }
+    save(); render(); toast(`“${t.title}” is open again.`);
+  }
+}
+
+/* "Next best actions": a transparent scoring model rather than a black box.
+   Overdue > due today > due soon, boosted by priority, today's focus and
+   whether the task moves a goal forward. Each suggestion shows its reasons. */
+function nextBestActions(limit = 5) {
+  const t0 = today();
+  const scored = openTasks().map(t => {
+    let score = 0; const why = [];
+    if (t.due) {
+      const n = diffDays(t0, t.due);
+      if (n < 0) { score += 100 + Math.min(-n, 30); why.push(`${plural(-n, 'day')} overdue`); }
+      else if (n === 0) { score += 80; why.push(t.time ? `Due today at ${fmtTime(t.time)}` : 'Due today'); }
+      else if (n <= 3) { score += 60 - n * 5; why.push(`Due ${relDate(t.due).toLowerCase() === 'tomorrow' ? 'tomorrow' : relDate(t.due)}`); }
+      else if (n <= 7) { score += 30; why.push('Due this week'); }
+    }
+    if (t.priority === 'high') { score += 25; why.push('High priority'); }
+    else if (t.priority === 'medium') score += 8;
+    if (t.focus) { score += 20; why.push("In today's focus"); }
+    if (t.goalId) { const g = find('goals', t.goalId); if (g && g.status !== 'done') { score += 6; why.push(`Moves “${g.title}” forward`); } }
+    return { kind: 'task', t, score, why };
+  }).filter(x => x.score >= 30).sort((a, b) => b.score - a.score);
+  const out = scored.slice(0, limit);
+  // Gentle nudge: active goals with no next action at all.
+  if (out.length < limit) {
+    state.goals.filter(g => g.status !== 'done' && !goalNextAction(g)).slice(0, limit - out.length)
+      .forEach(g => out.push({ kind: 'goal', g, why: ['This goal has no next step yet'] }));
+  }
+  return out;
+}
+
+/* Goal progress: averages whichever signals exist — the numeric measure
+   and milestone completion. Linked tasks are only a fallback, because
+   recurring tasks would otherwise distort the percentage. */
+function goalProgress(g) {
+  const parts = [];
+  const s = Number(g.measureStart) || 0, c = Number(g.measureCurrent) || 0, tg = Number(g.measureTarget);
+  if (g.measureTarget !== '' && g.measureTarget != null && !isNaN(tg) && tg !== s) parts.push(clamp01((c - s) / (tg - s)));
+  if (g.milestones && g.milestones.length) parts.push(g.milestones.filter(m => m.done).length / g.milestones.length);
+  if (!parts.length) {
+    const ts = state.tasks.filter(t => t.goalId === g.id);
+    if (ts.length) parts.push(ts.filter(t => t.done).length / ts.length);
+  }
+  if (g.status === 'done') return 100;
+  return parts.length ? Math.round(parts.reduce((a, b) => a + b, 0) / parts.length * 100) : 0;
+}
+function goalPace(g) {
+  if (!g.targetDate || g.status === 'done') return null;
+  const start = isoOfTimestamp(g.createdAt) || today();
+  const total = diffDays(start, g.targetDate); if (total <= 0) return null;
+  const expected = clamp01(diffDays(start, today()) / total) * 100;
+  const p = goalProgress(g);
+  if (p >= expected - 10) return { ok: true, text: 'On track' };
+  return { ok: false, text: 'Behind the plan — consider a smaller next step or a new date' };
+}
+function goalNextAction(g) {
+  const open = state.tasks.filter(t => t.goalId === g.id && !t.done).sort(sortTasks);
+  if (open[0]) return { type: 'task', task: open[0] };
+  const m = (g.milestones || []).find(m => !m.done);
+  if (m) return { type: 'milestone', m };
+  return null;
+}
+function projectStats(p) {
+  const ts = state.tasks.filter(t => t.projectId === p.id);
+  const done = ts.filter(t => t.done).length;
+  return { total: ts.length, done, pct: p.status === 'done' ? 100 : ts.length ? Math.round(done / ts.length * 100) : 0, open: ts.filter(t => !t.done).sort(sortTasks) };
+}
+
+/* Habits — deliberately no streaks. We show recent consistency in a
+   rolling 14-day window and use encouraging language. Missing a day
+   never "resets" anything. */
+function habitDone(h, iso) { return h.log.includes(iso); }
+function toggleHabitDay(id, iso) {
+  const h = find('habits', id); if (!h) return;
+  if (habitDone(h, iso)) h.log = h.log.filter(x => x !== iso); else h.log.push(iso);
+  save(); render();
+  toast(habitDone(h, iso) ? `Nice — “${h.name}” recorded for ${relDate(iso).toLowerCase()}.` : `Removed the check-in for ${fmtDate(iso)}.`);
+}
+function habitSummary(h) {
+  const t0 = today();
+  const last14 = Array.from({ length: 14 }, (_, i) => addDays(t0, i - 13));
+  const n14 = last14.filter(d => habitDone(h, d)).length;
+  const ws = startOfWeek(t0);
+  const thisWeek = h.log.filter(d => d >= ws && d <= t0).length;
+  let text, ratio;
+  if (h.cadence === 'weekly') {
+    const target = Number(h.targetPerWeek) || 1; ratio = clamp01(thisWeek / target);
+    text = `${thisWeek} of ${target} this week`;
+  } else { ratio = n14 / 14; text = `${n14} of the last 14 days`; }
+  const enc = ratio >= .7 ? 'A strong rhythm — keep it gentle.' : ratio >= .4 ? 'Steady progress. Every check-in counts.' : ratio > 0 ? 'You’ve been showing up — small steps add up.' : 'A fresh start is always available. Try once today?';
+  return { last14, n14, thisWeek, text, enc };
+}
+function toggleRoutineStep(id, idx) {
+  const h = find('habits', id); if (!h) return; const t0 = today();
+  const list = new Set(h.stepLog[t0] || []);
+  list.has(idx) ? list.delete(idx) : list.add(idx);
+  h.stepLog[t0] = [...list];
+  // Prune step history older than 30 days to keep storage small.
+  Object.keys(h.stepLog).forEach(k => { if (k < addDays(t0, -30)) delete h.stepLog[k]; });
+  const complete = h.steps.length && h.steps.every((_, i) => list.has(i));
+  const was = habitDone(h, t0);
+  if (complete && !was) h.log.push(t0);
+  if (!complete && was) h.log = h.log.filter(x => x !== t0);
+  save(); render();
+  if (complete && !was) toast(`Routine complete: “${h.name}”. Well done.`);
+}
+
+/* =====================================================================
+   FORMS (generic dialog driven by field definitions)
+   ===================================================================== */
+const catOpts = () => state.settings.categories.map(c => [c, c]);
+const FORMS = {
+  task: { coll: 'tasks', label: 'task', fields: [
+    { name: 'title', label: 'Task', type: 'text', required: true, full: true },
+    { name: 'due', label: 'Due date', type: 'date' },
+    { name: 'time', label: 'Time (optional)', type: 'time' },
+    { name: 'priority', label: 'Priority', type: 'select', options: [['high', 'High'], ['medium', 'Medium'], ['low', 'Low']], def: 'medium' },
+    { name: 'category', label: 'Category', type: 'select', options: catOpts, empty: 'No category' },
+    { name: 'recur', label: 'Repeats', type: 'select', options: [['none', 'Does not repeat'], ['daily', 'Daily'], ['weekly', 'Weekly'], ['fortnightly', 'Fortnightly'], ['monthly', 'Monthly']], def: 'none', help: 'Completing a repeating task schedules the next one.' },
+    { name: 'projectId', label: 'Project', type: 'select', options: () => state.projects.map(p => [p.id, p.title]), empty: 'No project' },
+    { name: 'goalId', label: 'Goal', type: 'select', options: () => state.goals.map(g => [g.id, g.title]), empty: 'No goal' },
+    { name: 'reminder', label: 'Treat as a reminder (shown in Today’s reminders)', type: 'checkbox', full: true },
+    { name: 'focus', label: 'Add to today’s focus', type: 'checkbox', full: true },
+    { name: 'notes', label: 'Notes', type: 'textarea', full: true }
+  ]},
+  event: { coll: 'events', label: 'event', fields: [
+    { name: 'title', label: 'Event', type: 'text', required: true, full: true },
+    { name: 'date', label: 'Date', type: 'date', required: true },
+    { name: 'location', label: 'Location', type: 'text' },
+    { name: 'time', label: 'Start time', type: 'time', help: 'Leave blank for an all-day event.' },
+    { name: 'endTime', label: 'End time', type: 'time' },
+    { name: 'notes', label: 'Notes', type: 'textarea', full: true }
+  ]},
+  goal: { coll: 'goals', label: 'goal', fields: [
+    { name: 'title', label: 'Goal', type: 'text', required: true, full: true, help: 'Make it specific, e.g. “Run a 10 km event”.' },
+    { name: 'why', label: 'Why this matters to me', type: 'textarea', full: true, help: 'Your reason keeps you going when motivation dips.' },
+    { name: 'targetDate', label: 'Target date', type: 'date' },
+    { name: 'area', label: 'Life area', type: 'select', options: catOpts, empty: 'None' },
+    { name: 'measureLabel', label: 'Measure of progress', type: 'text', full: true, help: 'What number shows progress? e.g. “Saved ($)” or “Longest run (km)”. Optional.' },
+    { name: 'measureStart', label: 'Starting value', type: 'number' },
+    { name: 'measureTarget', label: 'Target value', type: 'number' },
+    { name: 'measureCurrent', label: 'Current value', type: 'number' },
+    { name: 'status', label: 'Status', type: 'select', options: [['active', 'Active'], ['paused', 'Paused'], ['done', 'Achieved']], def: 'active' },
+    { name: 'milestonesText', label: 'Milestones (one per line)', type: 'textarea', full: true, createOnly: true, help: 'You can add, tick off and remove milestones on the goal card later.' }
+  ]},
+  project: { coll: 'projects', label: 'project', fields: [
+    { name: 'title', label: 'Project name', type: 'text', required: true, full: true },
+    { name: 'outcome', label: 'Outcome — what does “done” look like?', type: 'textarea', full: true },
+    { name: 'targetDate', label: 'Target date', type: 'date' },
+    { name: 'status', label: 'Status', type: 'select', options: [['active', 'Active'], ['paused', 'Paused'], ['done', 'Done']], def: 'active' },
+    { name: 'category', label: 'Category', type: 'select', options: catOpts, empty: 'None' }
+  ]},
+  habit: { coll: 'habits', label: 'habit or routine', fields: [
+    { name: 'name', label: 'Name', type: 'text', required: true, full: true },
+    { name: 'kind', label: 'Type', type: 'select', options: [['habit', 'Habit (single check-in)'], ['routine', 'Routine (checklist of steps)']], def: 'habit' },
+    { name: 'cadence', label: 'Rhythm', type: 'select', options: [['daily', 'Daily'], ['weekly', 'A few times a week']], def: 'daily' },
+    { name: 'targetPerWeek', label: 'Times per week (for weekly rhythm)', type: 'number', min: 1, max: 7, def: 3 },
+    { name: 'cue', label: 'When / where (your cue)', type: 'text', help: 'e.g. “After breakfast, at the kitchen table”.' },
+    { name: 'steps', label: 'Routine steps (one per line)', type: 'textarea', full: true, help: 'Only used for routines.' },
+    { name: 'paused', label: 'Paused — hide from Today without losing history', type: 'checkbox', full: true }
+  ]},
+  note: { coll: 'notes', label: 'note', fields: [
+    { name: 'title', label: 'Title', type: 'text', required: true, full: true },
+    { name: 'kind', label: 'Type', type: 'select', options: [['note', 'Note'], ['idea', 'Idea'], ['journal', 'Journal / reflection']], def: 'note' },
+    { name: 'link', label: 'Link to goal or project', type: 'select', options: linkOptions, empty: 'Not linked' },
+    { name: 'body', label: 'Note', type: 'textarea', full: true, rows: 8 }
+  ]}
+};
+function linkOptions() {
+  return [...state.goals.map(g => ['goal:' + g.id, 'Goal: ' + g.title]), ...state.projects.map(p => ['project:' + p.id, 'Project: ' + p.title])];
+}
+
+function fieldHTML(f, val) {
+  const id = 'f-' + f.name, cls = f.full ? 'full' : 'half';
+  const help = f.help ? `<p class="help" id="${id}-help">${esc(f.help)}</p>` : '';
+  const desc = f.help ? `aria-describedby="${id}-help"` : '';
+  const req = f.required ? 'required aria-required="true"' : '';
+  const v = val ?? f.def ?? '';
+  if (f.type === 'checkbox') return `<div class="field field-check ${cls}"><input type="checkbox" id="${id}" name="${f.name}" ${val ? 'checked' : ''} ${desc}><label for="${id}">${esc(f.label)}</label>${help}</div>`;
+  let ctl;
+  if (f.type === 'textarea') ctl = `<textarea id="${id}" name="${f.name}" rows="${f.rows || 3}" ${req} ${desc}>${esc(v)}</textarea>`;
+  else if (f.type === 'select') {
+    const opts = typeof f.options === 'function' ? f.options() : f.options;
+    ctl = `<select id="${id}" name="${f.name}" ${desc}>${f.empty ? `<option value="">${esc(f.empty)}</option>` : ''}${opts.map(([ov, ol]) => `<option value="${esc(ov)}" ${String(ov) === String(v) ? 'selected' : ''}>${esc(ol)}</option>`).join('')}</select>`;
+  } else ctl = `<input type="${f.type}" id="${id}" name="${f.name}" value="${esc(v)}" ${req} ${desc} ${f.type === 'number' ? `step="any" inputmode="decimal" ${f.min != null ? `min="${f.min}"` : ''} ${f.max != null ? `max="${f.max}"` : ''}` : ''} ${f.type === 'text' ? 'autocomplete="off"' : ''}>`;
+  return `<div class="field ${cls}"><label for="${id}">${esc(f.label)}${f.required ? ' <span aria-hidden="true">*</span><span class="sr-only">(required)</span>' : ''}</label>${ctl}${help}</div>`;
+}
+
+let dlgCtx = null, lastOpener = null;
+function openForm(type, id = null, preset = {}) {
+  const def = FORMS[type]; if (!def) return;
+  const item = id ? find(def.coll, id) : null;
+  const vals = { ...(item ? toFormValues(type, item) : {}), ...preset };
+  dlgCtx = { type, id };
+  lastOpener = document.activeElement;
+  $('#dlg-title').textContent = (item ? 'Edit ' : 'New ') + def.label;
+  $('#dlg-save').textContent = item ? 'Save changes' : `Add ${def.label}`;
+  $('#dlg-body').innerHTML = def.fields.filter(f => !(f.createOnly && item)).map(f => fieldHTML(f, vals[f.name])).join('');
+  const dlg = $('#dlg');
+  if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
+  setTimeout(() => $('#dlg-body input, #dlg-body textarea, #dlg-body select')?.focus(), 30);
+}
+function closeForm() {
+  const dlg = $('#dlg');
+  if (dlg.open) { typeof dlg.close === 'function' ? dlg.close() : dlg.removeAttribute('open'); }
+}
+$('#dlg').addEventListener('close', () => { dlgCtx = null; if (lastOpener && document.contains(lastOpener)) lastOpener.focus(); });
+$('#dlg-cancel').addEventListener('click', closeForm);
+
+function toFormValues(type, item) {
+  const v = { ...item };
+  if (type === 'note') v.link = item.linkType && item.linkId ? `${item.linkType}:${item.linkId}` : '';
+  if (type === 'habit') v.steps = (item.steps || []).join('\n');
+  return v;
+}
+$('#dlg-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const form = e.currentTarget;
+  if (!form.reportValidity()) return;
+  const { type, id } = dlgCtx || {}; if (!type) return;
+  const def = FORMS[type], fd = new FormData(form), vals = {};
+  def.fields.forEach(f => {
+    if (f.createOnly && id) return;
+    if (f.type === 'checkbox') vals[f.name] = fd.has(f.name);
+    else if (f.type === 'number') { const raw = (fd.get(f.name) ?? '').toString().trim(); vals[f.name] = raw === '' ? '' : Number(raw); }
+    else vals[f.name] = (fd.get(f.name) ?? '').toString().trim();
+  });
+  // Type-specific transforms
+  if (type === 'goal' && !id) {
+    vals.milestones = (vals.milestonesText || '').split('\n').map(s => s.trim()).filter(Boolean).map(title => ({ id: uid(), title, done: false }));
+    delete vals.milestonesText;
+  }
+  if (type === 'habit') {
+    const steps = (vals.steps || '').split('\n').map(s => s.trim()).filter(Boolean);
+    const prev = id ? find('habits', id) : null;
+    vals.steps = steps;
+    if (!prev || JSON.stringify(prev.steps) !== JSON.stringify(steps)) vals.stepLog = {};
+    if (!vals.targetPerWeek) vals.targetPerWeek = vals.cadence === 'daily' ? 7 : 3;
+  }
+  if (type === 'note') { const [lt, li] = (vals.link || '').split(':'); vals.linkType = lt || ''; vals.linkId = li || ''; delete vals.link; vals.updatedAt = nowISO(); }
+  if (type === 'task' && vals.recur !== 'none' && !vals.due) vals.due = today(); // a repeat needs an anchor date
+
+  let item;
+  if (id) { item = find(def.coll, id); Object.assign(item, vals, { updatedAt: nowISO() }); }
+  else {
+    const defaults = {
+      task: { done: false, completedAt: null }, goal: { status: 'active', milestones: [] }, habit: { log: [], stepLog: {} },
+      note: {}, event: {}, project: {}
+    }[type];
+    item = { id: uid(), createdAt: nowISO(), ...defaults, ...vals };
+    state[def.coll].push(item);
+  }
+  save(); closeForm(); render();
+  toast(`${cap(def.label)} ${id ? 'updated' : 'added'}: “${item.title || item.name}”.`);
+});
+
+/* Delete with Undo (and unlink references so nothing points at a ghost). */
+function removeItem(coll, id) {
+  const idx = state[coll].findIndex(x => x.id === id); if (idx < 0) return;
+  const [item] = state[coll].splice(idx, 1);
+  const prevLinks = [];
+  const unlink = (c, pred, fields) => state[c].forEach(x => { if (pred(x)) { prevLinks.push({ c, id: x.id, prev: Object.fromEntries(fields.map(f => [f, x[f]])) }); fields.forEach(f => x[f] = ''); } });
+  if (coll === 'projects') { unlink('tasks', t => t.projectId === id, ['projectId']); unlink('notes', n => n.linkType === 'project' && n.linkId === id, ['linkType', 'linkId']); }
+  if (coll === 'goals') { unlink('tasks', t => t.goalId === id, ['goalId']); unlink('notes', n => n.linkType === 'goal' && n.linkId === id, ['linkType', 'linkId']); }
+  save(); render();
+  toast(`Deleted “${item.title || item.name}”.`, {
+    action: 'Undo', onAction: () => {
+      state[coll].splice(Math.min(idx, state[coll].length), 0, item);
+      prevLinks.forEach(p => { const x = find(p.c, p.id); if (x) Object.assign(x, p.prev); });
+      save(); render(); toast('Restored.');
+    }
+  });
+}
+
+/* =====================================================================
+   RENDER HELPERS
+   ===================================================================== */
+function progressBar(pct, label) {
+  return `<div class="progress-row"><div class="progress" role="progressbar" aria-label="${esc(label)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><span style="width:${pct}%"></span></div><span class="pct" aria-hidden="true">${pct}%</span></div>`;
+}
+function taskBadges(t) {
+  const st = taskStatus(t), out = [];
+  if (t.due) out.push(`<span class="chip ${st === 'overdue' ? 'overdue' : st === 'today' ? 'today' : st === 'soon' ? 'soon' : ''}">${st === 'overdue' ? '⚠ ' : ''}${esc(relDate(t.due))}${t.time ? ' · ' + esc(fmtTime(t.time)) : ''}</span>`);
+  if (t.priority === 'high') out.push(`<span class="chip high">High priority</span>`);
+  if (t.reminder) out.push(`<span class="chip">Reminder</span>`);
+  if (t.recur && t.recur !== 'none') out.push(`<span class="chip" title="Repeats ${esc(t.recur)}">↻ ${esc(cap(t.recur))}</span>`);
+  if (t.category) out.push(`<span class="chip">${esc(t.category)}</span>`);
+  const p = t.projectId && find('projects', t.projectId); if (p) out.push(`<span class="chip accent">Project: ${esc(p.title)}</span>`);
+  const g = t.goalId && find('goals', t.goalId); if (g) out.push(`<span class="chip accent">Goal: ${esc(g.title)}</span>`);
+  return out.join('');
+}
+function taskRow(t, opts = {}) {
+  const cid = `chk-${opts.ctx || 'x'}-${t.id}`;
+  return `<li class="task ${t.done ? 'is-done' : ''}">
+    <input type="checkbox" id="${cid}" data-action="toggle-task" data-id="${t.id}" ${t.done ? 'checked' : ''} aria-describedby="${cid}-meta">
+    <div class="task-main"><label for="${cid}" class="task-title">${esc(t.title)}</label>
+      <div class="meta" id="${cid}-meta">${taskBadges(t)}</div>
+      ${t.notes && opts.showNotes ? `<p class="small muted" style="margin:4px 0 0">${esc(t.notes)}</p>` : ''}</div>
+    <div class="row-actions">
+      ${t.done ? '' : `<button type="button" class="icon-btn" data-action="focus-task" data-id="${t.id}" aria-pressed="${!!t.focus}" title="Today's focus" aria-label="Today's focus: ${esc(t.title)}">★</button>`}
+      <button type="button" class="icon-btn" data-action="edit" data-type="task" data-id="${t.id}" aria-label="Edit ${esc(t.title)}">Edit</button>
+      <button type="button" class="icon-btn" data-action="delete" data-coll="tasks" data-id="${t.id}" aria-label="Delete ${esc(t.title)}">Delete</button>
+    </div></li>`;
+}
+function taskList(tasks, emptyText, opts) {
+  return tasks.length ? `<ul class="list">${tasks.map(t => taskRow(t, opts)).join('')}</ul>` : `<p class="empty">${emptyText}</p>`;
+}
+function eventRow(e, showDate = false) {
+  return `<li class="event"><time datetime="${e.date}${e.time ? 'T' + e.time : ''}">${showDate ? esc(fmtDate(e.date, { weekday: 'short', day: 'numeric' })) + '<br>' : ''}${e.time ? esc(fmtTime(e.time)) : 'All day'}</time>
+    <div class="grow"><strong>${esc(e.title)}</strong>${e.location ? `<div class="small muted">${esc(e.location)}</div>` : ''}${e.notes ? `<div class="small muted">${esc(e.notes)}</div>` : ''}</div>
+    <div class="row-actions"><button type="button" class="icon-btn" data-action="edit" data-type="event" data-id="${e.id}" aria-label="Edit ${esc(e.title)}">Edit</button>
+    <button type="button" class="icon-btn" data-action="delete" data-coll="events" data-id="${e.id}" aria-label="Delete ${esc(e.title)}">Delete</button></div></li>`;
+}
+const presetAttrs = obj => Object.entries(obj).map(([k, v]) => `data-preset-${k.replace(/[A-Z]/g, m => '-' + m.toLowerCase())}="${esc(v)}"`).join(' ');
+
+/* =====================================================================
+   VIEWS
+   ===================================================================== */
+function renderToday() {
+  const t0 = today(), open = openTasks(), h = new Date().getHours();
+  const greet = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  const overdue = open.filter(t => t.due && t.due < t0 && !t.reminder).sort(sortTasks);
+  const dueToday = open.filter(t => t.due === t0 && !t.reminder).sort(sortTasks);
+  const reminders = open.filter(t => t.reminder && t.due && t.due <= addDays(t0, 1)).sort(sortTasks);
+  const focus = open.filter(t => t.focus).sort(sortTasks);
+  const evToday = eventsOn(t0);
+  const upcoming = state.events.filter(e => e.date > t0 && e.date <= addDays(t0, 7)).sort(byDateTime);
+  const nba = nextBestActions(5);
+  const habits = state.habits.filter(x => !x.paused);
+  const goals = state.goals.filter(g => g.status === 'active');
+  const dow = new Date().getDay();
+  const reviewed = state.reviews.some(r => r.weekOf === startOfWeek(t0));
+  const parts = [];
+  if (dueToday.length) parts.push(plural(dueToday.length, 'task') + ' due today');
+  if (overdue.length) parts.push(`${overdue.length} overdue`);
+  if (evToday.length) parts.push(plural(evToday.length, 'event'));
+  const summary = parts.length ? `You have ${parts.join(', ')}. One thing at a time.` : 'Nothing urgent today — a good day to move a goal forward.';
+  const qk = ui.qaKind;
+
+  return `
+  <div class="page-head"><div><h1>${greet}</h1><p>${esc(fmtLong(t0))} · ${esc(summary)}</p></div></div>
+  ${state.meta.isSample ? `<p class="notice info" style="margin-bottom:var(--space)">You’re looking at sample data so you can try everything. When you’re ready, go to <a href="#data">Data &amp; sync</a> and choose “Start fresh”.</p>` : ''}
+  <div class="grid cols-2">
+    <section class="card span-2" aria-labelledby="qa-h">
+      <h2 id="qa-h">Quick add</h2>
+      <form data-form="quick" autocomplete="off">
+        <fieldset class="seg"><legend class="sr-only">What are you adding?</legend>
+          ${['task', 'event', 'reminder', 'note'].map(v => `<input type="radio" name="kind" id="qa-${v}" value="${v}" ${qk === v ? 'checked' : ''}><label for="qa-${v}">${cap(v)}</label>`).join('')}
+        </fieldset>
+        <div class="qa-row">
+          <div class="field grow"><label for="qa-text" id="qa-text-label">${qk === 'note' ? 'Note or idea' : qk === 'event' ? 'Event' : qk === 'reminder' ? 'Remind me to…' : 'Task'}</label>
+            <input type="text" id="qa-text" name="text" required placeholder="${qk === 'note' ? 'Capture a thought…' : qk === 'event' ? 'e.g. Dentist appointment' : qk === 'reminder' ? 'e.g. Put bins out' : 'e.g. Book car service'}"></div>
+          <div class="field" data-kinds="task,event,reminder" ${qk === 'note' ? 'hidden' : ''}><label for="qa-date">Date</label><input type="date" id="qa-date" name="date" value="${qk === 'task' ? '' : t0}"></div>
+          <div class="field" data-kinds="event,reminder" ${['event', 'reminder'].includes(qk) ? '' : 'hidden'}><label for="qa-time">Time</label><input type="time" id="qa-time" name="time"></div>
+          <div class="field" data-kinds="task" ${qk === 'task' ? '' : 'hidden'}><label for="qa-pri">Priority</label><select id="qa-pri" name="priority"><option value="high">High</option><option value="medium" selected>Medium</option><option value="low">Low</option></select></div>
+          <button type="submit" class="btn btn-primary">Add</button>
+        </div>
+        <p class="help" style="margin-top:8px">Need more detail (category, repeat, project)? Use <button type="button" class="btn-link" data-action="new" data-type="task">full task form</button> or press <kbd>N</kbd>.</p>
+      </form>
+    </section>
+
+    <section class="card" aria-labelledby="nba-h">
+      <div class="card-head"><h2 id="nba-h">Next best actions</h2><span class="small muted">Based on due dates, priority and goals</span></div>
+      ${nba.length ? `<ol class="list">${nba.map((x, i) => x.kind === 'task' ? `
+        <li class="nba"><span class="rank" aria-hidden="true">${i + 1}</span>
+          <input type="checkbox" id="nba-${x.t.id}" data-action="toggle-task" data-id="${x.t.id}" style="margin-top:3px" aria-describedby="nba-why-${x.t.id}">
+          <div class="task-main"><label for="nba-${x.t.id}" class="task-title">${esc(x.t.title)}</label><div class="why" id="nba-why-${x.t.id}">${esc(x.why.join(' · '))}</div></div>
+          <div class="row-actions"><button type="button" class="icon-btn" data-action="snooze" data-id="${x.t.id}" aria-label="Move ${esc(x.t.title)} to tomorrow">Tomorrow</button></div></li>` : `
+        <li class="nba"><span class="rank" aria-hidden="true">${i + 1}</span><div class="task-main"><strong>${esc(x.g.title)}</strong><div class="why">${esc(x.why[0])}</div></div>
+          <button type="button" class="btn btn-sm" data-action="new" data-type="task" ${presetAttrs({ goalId: x.g.id, category: x.g.area || '' })}>Add next step</button></li>`).join('')}</ol>`
+        : `<p class="empty">You’re clear. Nothing overdue or pressing — pick something that matters to you, or rest.</p>`}
+    </section>
+
+    <section class="card" aria-labelledby="focus-h">
+      <div class="card-head"><h2 id="focus-h">Today’s focus</h2><span class="small muted">${focus.length}/3</span></div>
+      ${focus.length ? taskList(focus, '', { ctx: 'focus' }) : `<p class="empty">Star (★) up to three tasks that would make today feel like a good day.</p>`}
+      ${focus.length > 3 ? `<p class="help" style="margin-top:8px">Tip: three focus items or fewer tends to feel more achievable.</p>` : ''}
+    </section>
+
+    <section class="card" aria-labelledby="ev-h">
+      <div class="card-head"><h2 id="ev-h">Events</h2><a class="small" href="#calendar">Calendar</a></div>
+      <h3 class="group-title">Today</h3>
+      ${evToday.length ? `<ul class="list">${evToday.map(e => eventRow(e)).join('')}</ul>` : `<p class="empty">No events today.</p>`}
+      <h3 class="group-title">Next 7 days</h3>
+      ${upcoming.length ? `<ul class="list">${upcoming.map(e => eventRow(e, true)).join('')}</ul>` : `<p class="empty">Nothing scheduled this week.</p>`}
+    </section>
+
+    <section class="card" aria-labelledby="due-h">
+      <div class="card-head"><h2 id="due-h">Due today &amp; overdue</h2><a class="small" href="#tasks">All tasks</a></div>
+      ${overdue.length ? `<h3 class="group-title overdue">Overdue (${overdue.length})</h3>${taskList(overdue, '', { ctx: 'od' })}` : ''}
+      <h3 class="group-title">Due today</h3>${taskList(dueToday, 'Nothing else due today.', { ctx: 'td' })}
+      ${reminders.length ? `<h3 class="group-title">Reminders · today &amp; tomorrow</h3>${taskList(reminders, '', { ctx: 'rem' })}` : ''}
+    </section>
+
+    <section class="card" aria-labelledby="hab-h">
+      <div class="card-head"><h2 id="hab-h">Habits &amp; routines</h2><a class="small" href="#habits">Details</a></div>
+      ${habits.length ? `<ul class="list">${habits.map(hb => {
+        const done = habitDone(hb, t0);
+        const stepInfo = hb.kind === 'routine' ? `${(hb.stepLog[t0] || []).length}/${hb.steps.length} steps · ` : '';
+        return `<li class="habit-row"><div class="grow"><strong>${esc(hb.name)}</strong><div class="small muted">${stepInfo}${esc(habitSummary(hb).text)}</div></div>
+          ${hb.kind === 'routine' ? `<a class="btn btn-sm" href="#habits">Open</a>` : `<button type="button" class="check-btn" data-action="habit-day" data-id="${hb.id}" data-date="${t0}" aria-pressed="${done}">${done ? '✓ Done' : 'Mark done'}<span class="sr-only"> today: ${esc(hb.name)}</span></button>`}</li>`;
+      }).join('')}</ul>` : `<p class="empty">No habits yet. <a href="#habits">Add one</a> — start small.</p>`}
+    </section>
+
+    <section class="card" aria-labelledby="gl-h">
+      <div class="card-head"><h2 id="gl-h">Goals at a glance</h2><a class="small" href="#goals">Goals</a></div>
+      ${goals.length ? goals.map(g => { const na = goalNextAction(g), p = goalProgress(g);
+        return `<div style="margin-bottom:14px"><div class="card-head" style="margin-bottom:4px"><strong>${esc(g.title)}</strong><span class="small muted">${esc(untilText(g.targetDate))}</span></div>
+        ${progressBar(p, g.title + ' progress')}
+        <div class="small muted" style="margin-top:4px">Next: ${na ? (na.type === 'task' ? esc(na.task.title) : 'Plan a step for “' + esc(na.m.title) + '”') : 'No next step yet'}</div></div>`; }).join('')
+        : `<p class="empty">No active goals. <a href="#goals">Set one</a> when you’re ready.</p>`}
+    </section>
+
+    ${(dow === 5 || dow === 6 || dow === 0) && !reviewed ? `<section class="card span-2 notice info" aria-labelledby="rv-h"><h2 id="rv-h">Weekly review is ready</h2><p>Ten quiet minutes to look back and choose next week’s steps.</p><a class="btn btn-primary" href="#review">Start review</a></section>` : ''}
+  </div>`;
+}
+
+function renderTasks() {
+  const t0 = today(), q = ui.taskSearch.toLowerCase();
+  let list = state.tasks.filter(t =>
+    (!ui.taskCat || t.category === ui.taskCat) &&
+    (!ui.taskProject || t.projectId === ui.taskProject) &&
+    (!ui.taskPriority || t.priority === ui.taskPriority) &&
+    (!q || (t.title + ' ' + (t.notes || '')).toLowerCase().includes(q)));
+  const v = ui.taskView;
+  const groups = [];
+  const openL = list.filter(t => !t.done).sort(sortTasks);
+  const G = (key, title, items, cls = '') => items.length && groups.push({ key, title, items, cls });
+  if (v === 'open' || v === 'all') {
+    G('od', 'Overdue', openL.filter(t => taskStatus(t) === 'overdue'), 'overdue');
+    G('td', 'Today', openL.filter(t => taskStatus(t) === 'today'));
+    G('sn', 'Next 7 days', openL.filter(t => taskStatus(t) === 'soon'));
+    G('lt', 'Later', openL.filter(t => taskStatus(t) === 'later'));
+    G('nd', 'No date', openL.filter(t => taskStatus(t) === 'nodate'));
+  }
+  if (v === 'today') { G('od', 'Overdue', openL.filter(t => taskStatus(t) === 'overdue'), 'overdue'); G('td', 'Today', openL.filter(t => t.due === t0)); }
+  if (v === 'overdue') G('od', 'Overdue', openL.filter(t => taskStatus(t) === 'overdue'), 'overdue');
+  if (v === 'upcoming') G('sn', 'Next 7 days', openL.filter(t => taskStatus(t) === 'soon'));
+  if (v === 'nodate') G('nd', 'No date', openL.filter(t => !t.due));
+  if (v === 'done' || v === 'all') {
+    const d = list.filter(t => t.done).sort((a, b) => (b.completedAt || '').localeCompare(a.completedAt || ''));
+    G('dn', `Completed${d.length > 60 ? ' (latest 60)' : ''}`, d.slice(0, 60));
+  }
+  const count = groups.reduce((n, g) => n + g.items.length, 0);
+  const sel = (id, label, key, opts, empty) => `<div class="field"><label for="${id}">${label}</label><select id="${id}" data-filter="${key}">${empty ? `<option value="">${empty}</option>` : ''}${opts.map(([v2, l]) => `<option value="${esc(v2)}" ${ui[key] === v2 ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></div>`;
+  return `
+  <div class="page-head"><div><h1>Tasks</h1><p>${plural(openTasks().length, 'open task')} · ${openTasks().filter(t => taskStatus(t) === 'overdue').length} overdue</p></div>
+    <button type="button" class="btn btn-primary" data-action="new" data-type="task">+ New task</button></div>
+  <section class="card" aria-label="Task list">
+    <div class="toolbar" style="margin-bottom:16px">
+      <div class="field" style="flex:1 1 200px"><label for="task-search">Search</label><input type="search" id="task-search" data-filter="taskSearch" value="${esc(ui.taskSearch)}" placeholder="Search tasks"></div>
+      ${sel('tf-view', 'Show', 'taskView', [['open', 'All open'], ['today', 'Today & overdue'], ['overdue', 'Overdue'], ['upcoming', 'Next 7 days'], ['nodate', 'No date'], ['done', 'Completed'], ['all', 'Everything']])}
+      ${sel('tf-cat', 'Category', 'taskCat', catOpts(), 'All')}
+      ${sel('tf-proj', 'Project', 'taskProject', state.projects.map(p => [p.id, p.title]), 'All')}
+      ${sel('tf-pri', 'Priority', 'taskPriority', [['high', 'High'], ['medium', 'Medium'], ['low', 'Low']], 'All')}
+    </div>
+    <p class="sr-only" aria-live="polite">${plural(count, 'task')} shown</p>
+    ${groups.length ? groups.map(g => `<h2 class="group-title ${g.cls}">${esc(g.title)} (${g.items.length})</h2>${taskList(g.items, '', { ctx: g.key, showNotes: true })}`).join('')
+      : `<p class="empty">${state.tasks.length ? 'No tasks match these filters.' : 'No tasks yet. Add your first one with “New task”.'}</p>`}
+  </section>`;
+}
+
+function renderCalendar() {
+  const m0 = ui.calMonth, first = parseISO(m0), t0 = today();
+  const gridStart = addDays(m0, -((first.getDay() + 6) % 7));
+  const monthLabel = first.toLocaleDateString('en-AU', { month: 'long', year: 'numeric' });
+  const days = Array.from({ length: 42 }, (_, i) => addDays(gridStart, i));
+  const weeks = []; for (let i = 0; i < 6; i++) weeks.push(days.slice(i * 7, i * 7 + 7));
+  const dueOn = iso => state.tasks.filter(t => !t.done && t.due === iso).sort(sortTasks);
+  const cell = iso => {
+    const ev = eventsOn(iso), tk = dueOn(iso), inM = iso.slice(0, 7) === m0.slice(0, 7);
+    const items = [...ev.map(e => `<span class="cal-item ev">${e.time ? esc(e.time) + ' ' : ''}${esc(e.title)}</span>`), ...tk.map(t => `<span class="cal-item ${iso < t0 ? 'od' : 'tk'}">☐ ${esc(t.title)}</span>`)];
+    const label = `${fmtLong(iso)}${iso === t0 ? ', today' : ''}: ${plural(ev.length, 'event')}, ${plural(tk.length, 'task')} due`;
+    return `<td><button type="button" class="cal-day ${inM ? '' : 'out'} ${iso === t0 ? 'is-today' : ''}" data-action="cal-select" data-date="${iso}" aria-pressed="${iso === ui.calSelected}" tabindex="${iso === ui.calSelected ? 0 : -1}" aria-label="${esc(label)}">
+      <span class="dnum" aria-hidden="true">${parseISO(iso).getDate()}</span>
+      <span aria-hidden="true">${items.slice(0, 3).join('')}${items.length > 3 ? `<span class="cal-item tk">+${items.length - 3} more</span>` : ''}</span>
+      <span class="dots" aria-hidden="true">${ev.slice(0, 3).map(() => '<i></i>').join('')}${tk.slice(0, 3).map(() => '<i class="tk"></i>').join('')}</span></button></td>`;
+  };
+  const sd = ui.calSelected, selEv = eventsOn(sd), selTk = dueOn(sd);
+  const agendaDays = Array.from({ length: 14 }, (_, i) => addDays(t0, i)).map(d => ({ d, ev: eventsOn(d), tk: dueOn(d) })).filter(x => x.ev.length || x.tk.length);
+  return `
+  <div class="page-head"><div><h1>Calendar</h1><p>Events and task deadlines. Use arrow keys to move between days.</p></div>
+    <div class="toolbar"><button type="button" class="btn" data-action="new" data-type="event" ${presetAttrs({ date: sd })}>+ New event</button></div></div>
+  <div class="cal-wrap">
+    <section class="card" aria-labelledby="cal-h">
+      <div class="card-head"><h2 id="cal-h" aria-live="polite">${esc(monthLabel)}</h2>
+        <div class="toolbar"><button type="button" class="btn btn-sm" data-action="cal-nav" data-dir="-1" aria-label="Previous month">‹ Prev</button>
+        <button type="button" class="btn btn-sm" data-action="cal-today">Today</button>
+        <button type="button" class="btn btn-sm" data-action="cal-nav" data-dir="1" aria-label="Next month">Next ›</button></div></div>
+      <table class="cal" aria-labelledby="cal-h"><thead><tr>${['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => `<th scope="col">${d}</th>`).join('')}</tr></thead>
+      <tbody>${weeks.map(w => `<tr>${w.map(cell).join('')}</tr>`).join('')}</tbody></table>
+      <p class="help" style="margin-top:8px"><kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> move day · <kbd>PgUp</kbd>/<kbd>PgDn</kbd> change month</p>
+    </section>
+    <div class="stack">
+      <section class="card" aria-labelledby="day-h">
+        <div class="card-head"><h2 id="day-h">${esc(fmtLong(sd))}</h2></div>
+        <h3 class="group-title">Events</h3>${selEv.length ? `<ul class="list">${selEv.map(e => eventRow(e)).join('')}</ul>` : `<p class="empty">No events.</p>`}
+        <h3 class="group-title">Tasks due</h3>${taskList(selTk, 'No tasks due.', { ctx: 'cal' })}
+        <div class="card-actions"><button type="button" class="btn btn-sm" data-action="new" data-type="event" ${presetAttrs({ date: sd })}>Add event this day</button>
+          <button type="button" class="btn btn-sm" data-action="new" data-type="task" ${presetAttrs({ due: sd })}>Add task due this day</button></div>
+      </section>
+      <section class="card" aria-labelledby="ag-h"><h2 id="ag-h">Agenda · next 14 days</h2>
+        ${agendaDays.length ? agendaDays.map(x => `<h3 class="group-title">${esc(relDate(x.d) === fmtDate(x.d) ? fmtDate(x.d) : relDate(x.d) + ' · ' + fmtDate(x.d, { day: 'numeric', month: 'short' }))}</h3>
+          <ul class="list">${x.ev.map(e => eventRow(e)).join('')}${x.tk.map(t => taskRow(t, { ctx: 'ag' })).join('')}</ul>`).join('') : `<p class="empty">A clear fortnight.</p>`}
+      </section>
+    </div>
+  </div>`;
+}
+
+function goalCard(g) {
+  const p = goalProgress(g), na = goalNextAction(g), pace = goalPace(g);
+  const linked = state.tasks.filter(t => t.goalId === g.id), openLinked = linked.filter(t => !t.done).sort(sortTasks);
+  const notes = state.notes.filter(n => n.linkType === 'goal' && n.linkId === g.id).length;
+  const hasMeasure = g.measureTarget !== '' && g.measureTarget != null;
+  const focusThisWeek = g.focusWeekOf === startOfWeek(today());
+  return `<article class="card" aria-labelledby="g-${g.id}">
+    <div class="card-head"><h2 id="g-${g.id}">${esc(g.title)}</h2>${g.status === 'done' ? '<span class="chip accent">Achieved ✓</span>' : g.status === 'paused' ? '<span class="chip">Paused</span>' : ''}</div>
+    <div class="meta">${g.area ? `<span class="chip">${esc(g.area)}</span>` : ''}<span class="chip">${esc(untilText(g.targetDate))}</span>${focusThisWeek ? '<span class="chip accent">This week’s focus</span>' : ''}${pace ? `<span class="chip ${pace.ok ? 'accent' : 'today'}">${esc(pace.text)}</span>` : ''}</div>
+    ${g.why ? `<p class="why-text"><span class="sr-only">Why: </span>${esc(g.why)}</p>` : ''}
+    ${progressBar(p, g.title + ' overall progress')}
+    ${hasMeasure ? `<form class="inline-form" data-form="measure" data-id="${g.id}">
+        <div class="field"><label for="m-${g.id}">${esc(g.measureLabel || 'Current value')} — target ${esc(g.measureTarget)}</label>
+        <input type="number" step="any" inputmode="decimal" id="m-${g.id}" name="value" value="${esc(g.measureCurrent ?? '')}"></div>
+        <button type="submit" class="btn btn-sm">Update</button></form>` : ''}
+    <div class="next-action"><strong>Next action</strong>
+      ${na ? (na.type === 'task' ? `${esc(na.task.title)}${na.task.due ? ` · <span class="${taskStatus(na.task) === 'overdue' ? 'chip overdue' : ''}">${esc(relDate(na.task.due))}</span>` : ''}
+          <div style="margin-top:6px"><button type="button" class="btn btn-sm" data-action="toggle-task" data-id="${na.task.id}">Mark done</button></div>`
+        : `Turn the milestone “${esc(na.m.title)}” into a concrete step.<div style="margin-top:6px"><button type="button" class="btn btn-sm" data-action="new" data-type="task" ${presetAttrs({ goalId: g.id, category: g.area || '', title: na.m.title })}>Create task</button></div>`)
+        : `No next step yet. What’s one small thing you could do this week?<div style="margin-top:6px"><button type="button" class="btn btn-sm" data-action="new" data-type="task" ${presetAttrs({ goalId: g.id, category: g.area || '' })}>Add a step</button></div>`}
+    </div>
+    <h3 class="group-title">Milestones (${g.milestones.filter(m => m.done).length}/${g.milestones.length})</h3>
+    ${g.milestones.length ? `<ul class="list">${g.milestones.map(m => `<li class="ms ${m.done ? 'done' : ''}">
+        <input type="checkbox" id="ms-${m.id}" data-action="ms-toggle" data-id="${g.id}" data-ms="${m.id}" ${m.done ? 'checked' : ''}>
+        <label for="ms-${m.id}">${esc(m.title)}</label>
+        <button type="button" class="icon-btn" data-action="ms-task" data-id="${g.id}" data-ms="${m.id}" aria-label="Create a task for milestone ${esc(m.title)}">+ Task</button>
+        <button type="button" class="icon-btn" data-action="ms-delete" data-id="${g.id}" data-ms="${m.id}" aria-label="Remove milestone ${esc(m.title)}">Remove</button></li>`).join('')}</ul>`
+      : `<p class="small muted">No milestones yet — break the goal into 3–5 checkpoints.</p>`}
+    <form class="inline-form" data-form="ms-add" data-id="${g.id}"><div class="field"><label for="msadd-${g.id}" class="sr-only">New milestone for ${esc(g.title)}</label>
+      <input type="text" id="msadd-${g.id}" name="title" placeholder="Add a milestone" required autocomplete="off"></div><button type="submit" class="btn btn-sm">Add</button></form>
+    ${openLinked.length > 1 ? `<details style="margin-top:10px"><summary>Open tasks for this goal (${openLinked.length})</summary>${taskList(openLinked, '', { ctx: 'g' + g.id.slice(0, 6) })}</details>` : ''}
+    <div class="card-actions">
+      <button type="button" class="btn btn-sm" data-action="new" data-type="task" ${presetAttrs({ goalId: g.id, category: g.area || '' })}>+ Task</button>
+      <button type="button" class="btn btn-sm" data-action="new" data-type="note" ${presetAttrs({ link: 'goal:' + g.id, kind: 'journal' })}>+ Reflection</button>
+      ${notes ? `<button type="button" class="btn btn-sm" data-action="show-notes" data-link="goal:${g.id}">Notes (${notes})</button>` : ''}
+      <button type="button" class="btn btn-sm" data-action="goal-status" data-id="${g.id}">${g.status === 'done' ? 'Reopen' : 'Mark achieved'}</button>
+      <button type="button" class="btn btn-sm" data-action="edit" data-type="goal" data-id="${g.id}">Edit</button>
+      <button type="button" class="btn btn-sm btn-danger" data-action="delete" data-coll="goals" data-id="${g.id}" data-confirm="Delete this goal? Linked tasks and notes are kept but unlinked.">Delete</button>
+    </div></article>`;
+}
+function renderGoals() {
+  const f = ui.goalFilter;
+  const list = state.goals.filter(g => f === 'all' || (f === 'active' ? g.status !== 'done' : g.status === 'done'))
+    .sort((a, b) => (a.targetDate || '9999').localeCompare(b.targetDate || '9999'));
+  return `
+  <div class="page-head"><div><h1>Goals &amp; growth</h1><p>A goal is a reason, a measure and the next small step.</p></div>
+    <div class="toolbar"><div class="field"><label for="gf">Show</label><select id="gf" data-filter="goalFilter">${[['active', 'In progress'], ['done', 'Achieved'], ['all', 'All']].map(([v, l]) => `<option value="${v}" ${f === v ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+    <button type="button" class="btn btn-primary" data-action="new" data-type="goal">+ New goal</button></div></div>
+  ${list.length ? `<div class="grid cols-2">${list.map(goalCard).join('')}</div>` : `<p class="empty">${state.goals.length ? 'No goals in this view.' : 'No goals yet. Start with one thing you’d love to be true in six months.'}</p>`}`;
+}
+
+function renderHabits() {
+  const t0 = today();
+  const active = state.habits.filter(h => !h.paused), paused = state.habits.filter(h => h.paused);
+  const card = h => {
+    const s = habitSummary(h), doneToday = habitDone(h, t0);
+    return `<article class="card" aria-labelledby="h-${h.id}">
+      <div class="card-head"><h2 id="h-${h.id}">${esc(h.name)}</h2><span class="chip">${h.kind === 'routine' ? 'Routine' : h.cadence === 'weekly' ? `${h.targetPerWeek}× a week` : 'Daily'}</span></div>
+      ${h.cue ? `<p class="small muted">Cue: ${esc(h.cue)}</p>` : ''}
+      ${h.kind === 'routine' ? `<fieldset style="border:0;padding:0;margin:8px 0"><legend class="group-title">Today’s steps</legend>
+          ${h.steps.length ? h.steps.map((st, i) => { const on = (h.stepLog[t0] || []).includes(i); return `<div class="ms ${on ? 'done' : ''}"><input type="checkbox" id="rs-${h.id}-${i}" data-action="routine-step" data-id="${h.id}" data-step="${i}" ${on ? 'checked' : ''}><label for="rs-${h.id}-${i}">${esc(st)}</label></div>`; }).join('') : '<p class="small muted">No steps yet — edit to add some.</p>'}</fieldset>`
+        : `<button type="button" class="check-btn" data-action="habit-day" data-id="${h.id}" data-date="${t0}" aria-pressed="${doneToday}">${doneToday ? '✓ Done today' : 'Mark done today'}<span class="sr-only">: ${esc(h.name)}</span></button>`}
+      <div class="habit-grid" role="group" aria-label="Last 14 days for ${esc(h.name)}">
+        ${s.last14.map(d => { const on = habitDone(h, d); return `<button type="button" class="hday ${d === t0 ? 'is-today' : ''}" data-action="habit-day" data-id="${h.id}" data-date="${d}" aria-pressed="${on}" aria-label="${esc(fmtDate(d, { weekday: 'long', day: 'numeric', month: 'long' }))}${d === t0 ? ' (today)' : ''}">${parseISO(d).getDate()}</button>`; }).join('')}
+      </div>
+      <p style="margin:6px 0 2px"><strong>${esc(s.text)}</strong></p>
+      <p class="encourage">${esc(s.enc)}</p>
+      <div class="card-actions">
+        <button type="button" class="btn btn-sm" data-action="edit" data-type="habit" data-id="${h.id}">Edit</button>
+        <button type="button" class="btn btn-sm" data-action="habit-pause" data-id="${h.id}">${h.paused ? 'Resume' : 'Pause'}</button>
+        <button type="button" class="btn btn-sm btn-danger" data-action="delete" data-coll="habits" data-id="${h.id}" data-confirm="Delete this habit and its history?">Delete</button>
+      </div></article>`;
+  };
+  return `
+  <div class="page-head"><div><h1>Habits &amp; routines</h1><p>No streaks to break. Missed days are just days — tap any past day to fix a check-in.</p></div>
+    <button type="button" class="btn btn-primary" data-action="new" data-type="habit">+ New habit or routine</button></div>
+  ${active.length ? `<div class="grid cols-2">${active.map(card).join('')}</div>` : `<p class="empty">No active habits. Try something tiny — two minutes is plenty to start.</p>`}
+  ${paused.length ? `<h2 class="group-title" style="margin-top:28px">Paused</h2><div class="grid cols-2">${paused.map(card).join('')}</div>` : ''}`;
+}
+
+function renderProjects() {
+  const f = ui.projectFilter;
+  const list = state.projects.filter(p => f === 'all' || (f === 'active' ? p.status !== 'done' : p.status === 'done'))
+    .sort((a, b) => (a.targetDate || '9999').localeCompare(b.targetDate || '9999'));
+  const card = p => {
+    const s = projectStats(p), notes = state.notes.filter(n => n.linkType === 'project' && n.linkId === p.id).length;
+    return `<article class="card" aria-labelledby="p-${p.id}">
+      <div class="card-head"><h2 id="p-${p.id}">${esc(p.title)}</h2><span class="chip ${p.status === 'done' ? 'accent' : ''}">${esc(cap(p.status || 'active'))}</span></div>
+      <div class="meta" style="margin-bottom:8px">${p.category ? `<span class="chip">${esc(p.category)}</span>` : ''}<span class="chip">${esc(untilText(p.targetDate))}</span></div>
+      ${p.outcome ? `<p><span class="muted small">Outcome:</span> ${esc(p.outcome)}</p>` : ''}
+      ${progressBar(s.pct, p.title + ' progress')}
+      <p class="small muted" style="margin-top:4px">${s.done} of ${plural(s.total, 'task')} done</p>
+      <h3 class="group-title">Next steps</h3>
+      ${taskList(s.open.slice(0, 4), p.status === 'done' ? 'Project complete.' : 'No open tasks — what’s the next step?', { ctx: 'p' + p.id.slice(0, 6) })}
+      ${s.open.length > 4 ? `<p class="small"><button type="button" class="btn-link" data-action="show-project-tasks" data-id="${p.id}">See all ${s.open.length} open tasks</button></p>` : ''}
+      <form class="inline-form" data-form="project-task" data-id="${p.id}"><div class="field"><label for="pt-${p.id}" class="sr-only">New task for ${esc(p.title)}</label>
+        <input type="text" id="pt-${p.id}" name="title" placeholder="Add a next step" required autocomplete="off"></div><button type="submit" class="btn btn-sm">Add</button></form>
+      <div class="card-actions">
+        <button type="button" class="btn btn-sm" data-action="new" data-type="note" ${presetAttrs({ link: 'project:' + p.id })}>+ Note</button>
+        ${notes ? `<button type="button" class="btn btn-sm" data-action="show-notes" data-link="project:${p.id}">Notes (${notes})</button>` : ''}
+        <button type="button" class="btn btn-sm" data-action="edit" data-type="project" data-id="${p.id}">Edit</button>
+        <button type="button" class="btn btn-sm btn-danger" data-action="delete" data-coll="projects" data-id="${p.id}" data-confirm="Delete this project? Its tasks and notes are kept but unlinked.">Delete</button>
+      </div></article>`;
+  };
+  return `
+  <div class="page-head"><div><h1>Personal projects</h1><p>Group tasks under an outcome and always know the next step.</p></div>
+    <div class="toolbar"><div class="field"><label for="pf">Show</label><select id="pf" data-filter="projectFilter">${[['active', 'Active & paused'], ['done', 'Done'], ['all', 'All']].map(([v, l]) => `<option value="${v}" ${f === v ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+    <button type="button" class="btn btn-primary" data-action="new" data-type="project">+ New project</button></div></div>
+  ${list.length ? `<div class="grid cols-2">${list.map(card).join('')}</div>` : `<p class="empty">${state.projects.length ? 'No projects in this view.' : 'No projects yet.'}</p>`}`;
+}
+
+function renderNotes() {
+  const q = ui.noteSearch.toLowerCase();
+  const list = state.notes.filter(n => (!ui.noteKind || n.kind === ui.noteKind) &&
+    (!ui.noteLink || (ui.noteLink === 'none' ? !n.linkId : `${n.linkType}:${n.linkId}` === ui.noteLink)) &&
+    (!q || (n.title + ' ' + n.body).toLowerCase().includes(q)))
+    .sort((a, b) => (b.updatedAt || b.createdAt || '').localeCompare(a.updatedAt || a.createdAt || ''));
+  const linkName = n => { if (!n.linkId) return ''; const x = find(n.linkType === 'goal' ? 'goals' : 'projects', n.linkId); return x ? `${cap(n.linkType)}: ${x.title}` : ''; };
+  const journalPreset = presetAttrs({ kind: 'journal', title: `Journal — ${fmtDate(today())}`, body: 'What went well?\n\n\nWhat felt hard?\n\n\nWhat matters tomorrow?\n' });
+  return `
+  <div class="page-head"><div><h1>Notes &amp; reflection</h1><p>Ideas, notes and journal entries. Link them to a goal or project.</p></div>
+    <div class="toolbar"><button type="button" class="btn" data-action="new" data-type="note" ${journalPreset}>+ Journal entry</button>
+    <button type="button" class="btn btn-primary" data-action="new" data-type="note">+ New note</button></div></div>
+  <section class="card" aria-label="Notes">
+    <div class="toolbar" style="margin-bottom:16px">
+      <div class="field" style="flex:1 1 200px"><label for="note-search">Search</label><input type="search" id="note-search" data-filter="noteSearch" value="${esc(ui.noteSearch)}" placeholder="Search notes"></div>
+      <div class="field"><label for="nk">Type</label><select id="nk" data-filter="noteKind"><option value="">All</option>${[['note', 'Notes'], ['idea', 'Ideas'], ['journal', 'Journal']].map(([v, l]) => `<option value="${v}" ${ui.noteKind === v ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+      <div class="field"><label for="nl">Linked to</label><select id="nl" data-filter="noteLink"><option value="">Anything</option><option value="none" ${ui.noteLink === 'none' ? 'selected' : ''}>Not linked</option>${linkOptions().map(([v, l]) => `<option value="${esc(v)}" ${ui.noteLink === v ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></div>
+    </div>
+    ${list.length ? `<div class="grid cols-2">${list.map(n => {
+      const long = (n.body || '').length > 260;
+      return `<article class="card" style="box-shadow:none;background:var(--surface-2)" aria-labelledby="n-${n.id}">
+        <div class="card-head"><h3 id="n-${n.id}">${esc(n.title)}</h3><span class="chip">${esc(cap(n.kind || 'note'))}</span></div>
+        <div class="meta" style="margin-bottom:8px">${linkName(n) ? `<span class="chip accent">${esc(linkName(n))}</span>` : ''}<span class="chip">${esc(fmtDate(isoOfTimestamp(n.updatedAt || n.createdAt), { day: 'numeric', month: 'short', year: 'numeric' }))}</span></div>
+        ${long ? `<p class="note-body">${esc(n.body.slice(0, 260))}…</p><details><summary>Read full note</summary><p class="note-body">${esc(n.body)}</p></details>` : `<p class="note-body">${esc(n.body || '')}</p>`}
+        <div class="card-actions"><button type="button" class="btn btn-sm" data-action="edit" data-type="note" data-id="${n.id}">Edit</button>
+        <button type="button" class="btn btn-sm btn-danger" data-action="delete" data-coll="notes" data-id="${n.id}">Delete</button></div></article>`;
+    }).join('')}</div>` : `<p class="empty">${state.notes.length ? 'No notes match.' : 'No notes yet. Capture an idea or write a short reflection.'}</p>`}
+  </section>`;
+}
+
+function renderReview() {
+  const t0 = today(), ws = startOfWeek(t0), we = addDays(ws, 6);
+  const existing = state.reviews.find(r => r.weekOf === ws) || {};
+  const completed = state.tasks.filter(t => t.done && isoOfTimestamp(t.completedAt) >= ws && isoOfTimestamp(t.completedAt) <= we);
+  const checkins = state.habits.reduce((n, h) => n + h.log.filter(d => d >= ws && d <= we).length, 0);
+  const overdue = openTasks().filter(t => taskStatus(t) === 'overdue').sort(sortTasks);
+  const nextWeek = startOfWeek(addDays(ws, 7));
+  const goals = state.goals.filter(g => g.status === 'active');
+  const past = state.reviews.filter(r => r.weekOf !== ws).sort((a, b) => b.weekOf.localeCompare(a.weekOf));
+  const ta = (name, label, help) => `<div class="field full"><label for="rv-${name}">${label}</label><textarea id="rv-${name}" name="${name}" rows="3" ${help ? `aria-describedby="rv-${name}-h"` : ''}>${esc(existing[name] || '')}</textarea>${help ? `<p class="help" id="rv-${name}-h">${help}</p>` : ''}</div>`;
+  return `
+  <div class="page-head"><div><h1>Weekly review</h1><p>Week of ${esc(fmtDate(ws, { day: 'numeric', month: 'long' }))} – ${esc(fmtDate(we, { day: 'numeric', month: 'long' }))}. Ten minutes, no judgement.</p></div></div>
+  <div class="grid cols-2">
+    <section class="card" aria-labelledby="rs-h"><h2 id="rs-h">1 · Look back</h2>
+      <div class="stats"><div class="stat"><b>${completed.length}</b><span class="small muted">tasks completed</span></div>
+        <div class="stat"><b>${checkins}</b><span class="small muted">habit check-ins</span></div>
+        <div class="stat"><b>${state.events.filter(e => e.date >= ws && e.date <= we).length}</b><span class="small muted">events</span></div></div>
+      ${completed.length ? `<details style="margin-top:10px"><summary>What you got done</summary><ul>${completed.map(t => `<li>${esc(t.title)}</li>`).join('')}</ul></details>` : ''}
+      <h3 class="group-title" style="margin-top:16px">Goals</h3>
+      ${goals.length ? goals.map(g => { const na = goalNextAction(g); return `<div style="margin-bottom:10px"><strong>${esc(g.title)}</strong>${progressBar(goalProgress(g), g.title + ' progress')}<div class="small muted">Next: ${na ? esc(na.type === 'task' ? na.task.title : 'plan a step for “' + na.m.title + '”') : 'none yet'}</div></div>`; }).join('') : '<p class="empty">No active goals.</p>'}
+    </section>
+    <section class="card" aria-labelledby="tri-h"><h2 id="tri-h">2 · Tidy up</h2>
+      <p class="small muted">Overdue items: reschedule, drop the date, or let them go. Each is a fair choice.</p>
+      ${overdue.length ? `<ul class="list">${overdue.map(t => `<li class="task"><div class="task-main"><strong>${esc(t.title)}</strong><div class="meta">${taskBadges(t)}</div></div>
+        <div class="row-actions" style="flex-wrap:wrap;justify-content:flex-end">
+          <button type="button" class="icon-btn" data-action="reschedule" data-id="${t.id}" data-to="${addDays(t0, 1)}" aria-label="Move ${esc(t.title)} to tomorrow">Tomorrow</button>
+          <button type="button" class="icon-btn" data-action="reschedule" data-id="${t.id}" data-to="${nextWeek}" aria-label="Move ${esc(t.title)} to next Monday">Next week</button>
+          <button type="button" class="icon-btn" data-action="reschedule" data-id="${t.id}" data-to="" aria-label="Remove due date from ${esc(t.title)}">No date</button>
+          <button type="button" class="icon-btn" data-action="delete" data-coll="tasks" data-id="${t.id}" aria-label="Let go of ${esc(t.title)}">Let go</button></div></li>`).join('')}</ul>` : `<p class="empty">Nothing overdue. Lovely.</p>`}
+    </section>
+    <section class="card span-2" aria-labelledby="rf-h"><h2 id="rf-h">3 · Reflect and choose next steps</h2>
+      <form data-form="review" class="form-grid">
+        ${ta('wins', 'What went well this week?')}
+        ${ta('challenges', 'What was hard, and what got in the way?')}
+        ${ta('learned', 'What did I learn or want to adjust?')}
+        ${ta('nextSteps', 'Next steps (one per line)', 'Tick the box below to turn each line into a task due next Monday.')}
+        <div class="field field-check full"><input type="checkbox" id="rv-mk" name="makeTasks"><label for="rv-mk">Create tasks from my next steps</label></div>
+        ${goals.length ? `<fieldset class="full" style="border:1px solid var(--border);border-radius:10px;padding:12px"><legend class="label" style="padding:0 6px">Goals to focus on next week</legend>
+          ${goals.map(g => `<div class="field-check field" style="margin:6px 0"><input type="checkbox" id="rvg-${g.id}" name="focusGoal" value="${g.id}" ${g.focusWeekOf === nextWeek ? 'checked' : ''}><label for="rvg-${g.id}">${esc(g.title)}</label></div>`).join('')}</fieldset>` : ''}
+        <div class="full"><button type="submit" class="btn btn-primary">${existing.id ? 'Update review' : 'Save review'}</button></div>
+      </form>
+    </section>
+    ${past.length ? `<section class="card span-2" aria-labelledby="pr-h"><h2 id="pr-h">Past reviews</h2>${past.map(r => `<details><summary>Week of ${esc(fmtDate(r.weekOf, { day: 'numeric', month: 'long', year: 'numeric' }))}</summary>
+      <dl class="small">${[['Went well', r.wins], ['Hard', r.challenges], ['Learned', r.learned], ['Next steps', r.nextSteps]].filter(x => x[1]).map(([k, v]) => `<dt><strong>${k}</strong></dt><dd class="note-body" style="margin:0 0 8px">${esc(v)}</dd>`).join('')}</dl></details>`).join('')}</section>` : ''}
+  </div>`;
+}
+
+function renderData() {
+  const json = JSON.stringify(state), kb = (new Blob([json]).size / 1024).toFixed(1);
+  const counts = COLLECTIONS.map(c => `${state[c].length} ${c}`).join(' · ');
+  return `
+  <div class="page-head"><div><h1>Data &amp; sync</h1><p>Where your data lives and how to move it between devices.</p></div></div>
+  <div class="grid cols-2">
+    <section class="card span-2" aria-labelledby="loc-h">
+      <h2 id="loc-h">Your data is stored on this device only</h2>
+      <p class="notice">Everything you enter is saved in this browser’s <strong>local storage</strong> on this device. It does <strong>not sync</strong> to your phone, tablet or other computers, and no data is sent anywhere. Each browser and device keeps its own separate copy. Clearing browser data, using private browsing, or some device-management policies can remove it, so <strong>export a backup regularly</strong>.</p>
+      <div class="stats" style="margin-top:14px">
+        <div class="stat"><b>${kb} KB</b><span class="small muted">stored</span></div>
+        <div class="stat"><b>${state.meta.updatedAt ? esc(new Date(state.meta.updatedAt).toLocaleString('en-AU', { dateStyle: 'medium', timeStyle: 'short' })) : '—'}</b><span class="small muted">last saved</span></div>
+        <div class="stat"><b>${state.meta.lastExport ? esc(fmtDate(isoOfTimestamp(state.meta.lastExport), { day: 'numeric', month: 'short' })) : 'Never'}</b><span class="small muted">last export</span></div>
+      </div>
+      <p class="small muted" style="margin-top:10px">${esc(counts)}${storageOK ? '' : ' · <strong>Warning:</strong> saving is currently failing in this browser.'}</p>
+    </section>
+
+    <section class="card" aria-labelledby="bk-h"><h2 id="bk-h">Back up or move your data</h2>
+      <p>Export a JSON file, then import it on another device. Importing replaces or merges with that device’s data.</p>
+      <div class="toolbar" style="margin-bottom:16px"><button type="button" class="btn btn-primary" data-action="export">Export JSON backup</button></div>
+      <form data-form="import" class="stack">
+        <div class="field"><label for="imp-file">Import a backup file (.json)</label><input type="file" id="imp-file" name="file" accept="application/json,.json" required></div>
+        <fieldset style="border:0;padding:0;margin:12px 0 0"><legend class="label">When importing</legend>
+          <div class="field-check field" style="margin:6px 0"><input type="radio" id="imp-merge" name="mode" value="merge" checked style="width:20px;height:20px"><label for="imp-merge">Merge — add new items and update items that changed more recently</label></div>
+          <div class="field-check field"><input type="radio" id="imp-rep" name="mode" value="replace" style="width:20px;height:20px"><label for="imp-rep">Replace everything on this device</label></div></fieldset>
+        <button type="submit" class="btn">Import</button>
+      </form>
+    </section>
+
+    <section class="card" aria-labelledby="st-h"><h2 id="st-h">Storage and settings</h2>
+      <p class="small">Ask the browser to keep this data even when space is low (supported in most modern browsers when the page is served over HTTPS).</p>
+      <button type="button" class="btn btn-sm" data-action="persist">Request persistent storage</button>
+      <h3 class="group-title" style="margin-top:18px">Categories</h3>
+      <div class="meta">${state.settings.categories.map(c => `<span class="chip">${esc(c)} <button type="button" class="icon-btn" style="min-height:22px;min-width:22px;padding:0 4px" data-action="cat-del" data-cat="${esc(c)}" aria-label="Remove category ${esc(c)}">×</button></span>`).join('')}</div>
+      <form class="inline-form" data-form="cat-add"><div class="field"><label for="cat-new">New category</label><input type="text" id="cat-new" name="cat" required autocomplete="off"></div><button type="submit" class="btn btn-sm">Add</button></form>
+      <h3 class="group-title" style="margin-top:18px">Keyboard</h3>
+      <div class="field-check field"><input type="checkbox" id="set-sc" data-action="toggle-shortcuts" ${state.settings.shortcuts ? 'checked' : ''}><label for="set-sc">Single-key shortcuts (N, /, 1–9)</label></div>
+      <h3 class="group-title" style="margin-top:18px">Reset</h3>
+      <div class="toolbar"><button type="button" class="btn btn-sm" data-action="start-fresh">Start fresh (empty)</button>
+        <button type="button" class="btn btn-sm" data-action="load-sample">Reload sample data</button></div>
+      <p class="help" style="margin-top:6px">Both ask for confirmation. Export first if you want to keep anything.</p>
+    </section>
+
+    <section class="card span-2" aria-labelledby="sync-h"><h2 id="sync-h">Cross-device sync — not set up</h2>
+      <p>Real sync needs a <strong>shared backend</strong> and <strong>sign-in</strong>, so only you can read your data. That isn’t built in yet. Until it is, the export/import above is the way to move data between devices.</p>
+      <div class="table-scroll"><table class="simple"><thead><tr><th scope="col">Option</th><th scope="col">What you would need to set up</th><th scope="col">Notes</th></tr></thead><tbody>
+        <tr><td><strong>Supabase</strong><br><span class="small muted">Postgres + Auth</span></td><td>Free Supabase account and project; email magic-link sign-in turned on; one table with Row Level Security (“a user can only read and write their own row”); the page hosted on HTTPS (e.g. GitHub Pages, Netlify, Cloudflare Pages).</td><td>The project URL and public “anon” key are designed to be public. Row Level Security is what protects the data. No server secrets go in the HTML.</td></tr>
+        <tr><td><strong>Firebase</strong><br><span class="small muted">Firestore + Auth</span></td><td>Google account; Firebase project; Authentication (Google or email link); Firestore with security rules limiting each document to its owner; HTTPS hosting (Firebase Hosting works).</td><td>The web config is a set of public identifiers. Security rules do the protecting.</td></tr>
+        <tr><td><strong>OneDrive</strong><br><span class="small muted">Microsoft Graph</span></td><td>A personal Microsoft account; an app registration (single-page app, PKCE, no client secret) with permission to its own app folder; HTTPS hosting with a matching redirect URL.</td><td>Stores one JSON file in your OneDrive app folder. A managed work tenant will usually block personal app consent, so use a personal account.</td></tr>
+        <tr><td><strong>Manual (current)</strong></td><td>None.</td><td>Export on one device, then import on another. Works today, but you have to do it by hand.</td></tr>
+      </tbody></table></div>
+    </section>
+  </div>`;
+}
+
+/* =====================================================================
+   ROUTER + RENDER LOOP
+   ===================================================================== */
+const VIEWS = {
+  today: { label: 'Today', render: renderToday },
+  tasks: { label: 'Tasks', render: renderTasks },
+  calendar: { label: 'Calendar', render: renderCalendar },
+  goals: { label: 'Goals', render: renderGoals },
+  habits: { label: 'Habits', render: renderHabits },
+  projects: { label: 'Projects', render: renderProjects },
+  notes: { label: 'Notes', render: renderNotes },
+  review: { label: 'Weekly review', render: renderReview },
+  data: { label: 'Data & sync', render: renderData }
+};
+const VIEW_KEYS = Object.keys(VIEWS);
+const currentView = () => { const h = location.hash.slice(1); return VIEWS[h] ? h : 'today'; };
+const main = $('#main');
+
+const focusKey = el => [el.tagName, el.id, el.dataset.action, el.dataset.id, el.dataset.date, el.dataset.step, el.dataset.ms, el.dataset.filter, el.dataset.dir].join('|');
+
+function renderNav(v) {
+  const od = openTasks().filter(t => taskStatus(t) === 'overdue').length;
+  $('#nav').innerHTML = VIEW_KEYS.map((k, i) => `<a href="#${k}" ${k === v ? 'aria-current="page"' : ''} title="${state.settings.shortcuts ? 'Shortcut: ' + (i + 1) : ''}">${esc(VIEWS[k].label)}${k === 'tasks' && od ? `<span class="count" aria-label="${od} overdue">${od}</span>` : ''}</a>`).join('');
+}
+function render() {
+  const v = currentView();
+  const ae = document.activeElement;
+  let key = null, caret = null;
+  if (ae && main.contains(ae) && ae !== main) { key = focusKey(ae); try { caret = ae.selectionStart; } catch (_) { caret = null; } }
+  main.innerHTML = VIEWS[v].render();
+  renderNav(v);
+  document.title = `${VIEWS[v].label} · Life Hub`;
+  if (key) {
+    const el = [...main.querySelectorAll('input,button,select,textarea,a')].find(x => focusKey(x) === key);
+    if (el) { el.focus({ preventScroll: true }); if (caret != null && el.setSelectionRange && /text|search/.test(el.type)) { try { el.setSelectionRange(caret, caret); } catch (_) {} } }
+    else main.focus({ preventScroll: true });
+  }
+}
+window.addEventListener('hashchange', () => { render(); main.focus({ preventScroll: true }); window.scrollTo(0, 0); });
+
+/* =====================================================================
+   TOASTS (polite live region; optional Undo action)
+   ===================================================================== */
+function toast(msg, opts = {}) {
+  const box = $('#toasts'), el = document.createElement('div');
+  el.className = 'toast' + (opts.type === 'error' ? ' error' : '');
+  el.innerHTML = `<span>${esc(msg)}</span>`;
+  if (opts.action) {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = opts.action;
+    b.addEventListener('click', () => { el.remove(); opts.onAction(); });
+    el.appendChild(b);
+  }
+  box.appendChild(el);
+  while (box.children.length > 3) box.firstChild.remove();
+  setTimeout(() => el.remove(), opts.action ? 9000 : 5000);
+}
+
+/* =====================================================================
+   EVENT DELEGATION
+   ===================================================================== */
+function presetFrom(el) {
+  const out = {};
+  for (const [k, v] of Object.entries(el.dataset)) if (k.startsWith('preset') && k.length > 6) out[k.charAt(6).toLowerCase() + k.slice(7)] = v;
+  return out;
+}
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-action]'); if (!el || el.closest('#toasts')) return;
+  const a = el.dataset.action, id = el.dataset.id;
+  switch (a) {
+    case 'toggle-task': toggleTask(id); break;
+    case 'focus-task': { const t = find('tasks', id); t.focus = !t.focus; save(); render(); toast(t.focus ? `Added to today’s focus.` : 'Removed from focus.'); break; }
+    case 'snooze': { const t = find('tasks', id); t.due = addDays(today(), 1); save(); render(); toast(`Moved “${t.title}” to tomorrow.`); break; }
+    case 'reschedule': { const t = find('tasks', id); t.due = el.dataset.to; if (!t.due) t.recur = 'none'; save(); render(); toast(t.due ? `Rescheduled to ${fmtDate(t.due)}.` : 'Due date removed.'); break; }
+    case 'new': openForm(el.dataset.type, null, presetFrom(el)); break;
+    case 'edit': openForm(el.dataset.type, id); break;
+    case 'delete': if (el.dataset.confirm && !confirm(el.dataset.confirm)) return; removeItem(el.dataset.coll, id); break;
+    case 'habit-day': toggleHabitDay(id, el.dataset.date); break;
+    case 'routine-step': toggleRoutineStep(id, Number(el.dataset.step)); break;
+    case 'habit-pause': { const h = find('habits', id); h.paused = !h.paused; save(); render(); toast(h.paused ? 'Paused. Your history is kept.' : 'Welcome back.'); break; }
+    case 'ms-toggle': { const g = find('goals', id), m = g.milestones.find(x => x.id === el.dataset.ms); m.done = !m.done; save(); render(); if (m.done) toast(`Milestone reached: “${m.title}”. 🎉`); break; }
+    case 'ms-delete': { const g = find('goals', id); const i = g.milestones.findIndex(x => x.id === el.dataset.ms); const [m] = g.milestones.splice(i, 1); save(); render(); toast(`Removed milestone “${m.title}”.`, { action: 'Undo', onAction: () => { g.milestones.splice(i, 0, m); save(); render(); } }); break; }
+    case 'ms-task': { const g = find('goals', id), m = g.milestones.find(x => x.id === el.dataset.ms); openForm('task', null, { goalId: g.id, category: g.area || '', title: m.title }); break; }
+    case 'goal-status': { const g = find('goals', id); g.status = g.status === 'done' ? 'active' : 'done'; if (g.status === 'done') g.achievedAt = nowISO(); save(); render(); toast(g.status === 'done' ? `Goal achieved: “${g.title}”. Take a moment to notice that.` : 'Goal reopened.'); break; }
+    case 'show-notes': ui.noteLink = el.dataset.link; ui.noteKind = ''; ui.noteSearch = ''; location.hash = 'notes'; break;
+    case 'show-project-tasks': ui.taskProject = id; ui.taskView = 'open'; location.hash = 'tasks'; break;
+    case 'cal-select': ui.calSelected = el.dataset.date; if (el.dataset.date.slice(0, 7) !== ui.calMonth.slice(0, 7)) ui.calMonth = el.dataset.date.slice(0, 8) + '01'; render(); break;
+    case 'cal-nav': ui.calMonth = addMonths(ui.calMonth, Number(el.dataset.dir)); ui.calSelected = ui.calMonth; render(); break;
+    case 'cal-today': ui.calMonth = today().slice(0, 8) + '01'; ui.calSelected = today(); render(); break;
+    case 'export': exportData(); break;
+    case 'persist':
+      if (navigator.storage && navigator.storage.persist) navigator.storage.persist().then(ok => toast(ok ? 'Persistent storage granted for this browser.' : 'The browser declined. Regular exports are your safety net.'));
+      else toast('This browser does not support persistent storage requests.');
+      break;
+    case 'cat-del': { const c = el.dataset.cat; state.settings.categories = state.settings.categories.filter(x => x !== c); save(); render(); toast(`Removed category “${c}”. Existing items keep their label.`); break; }
+    case 'toggle-shortcuts': state.settings.shortcuts = el.checked; save(); toast(el.checked ? 'Shortcuts on.' : 'Shortcuts off.'); break;
+    case 'start-fresh': if (confirm('Delete all data on this device and start with an empty dashboard? This cannot be undone. Export first if unsure.')) { const s = emptyState(); s.settings = state.settings; state = s; save(); render(); toast('Started fresh. Your categories were kept.'); } break;
+    case 'load-sample': if (confirm('Replace all data on this device with sample data?')) { state = sampleData(); save(); render(); toast('Sample data loaded.'); } break;
+  }
+});
+
+document.addEventListener('submit', e => {
+  const f = e.target, kind = f.dataset.form; if (!kind) return;
+  e.preventDefault();
+  if (!f.reportValidity()) return;
+  const fd = new FormData(f), id = f.dataset.id;
+  switch (kind) {
+    case 'quick': {
+      const text = (fd.get('text') || '').toString().trim(); if (!text) return;
+      const k = ui.qaKind, date = (fd.get('date') || '').toString(), time = (fd.get('time') || '').toString();
+      if (k === 'event') state.events.push({ id: uid(), title: text, date: date || today(), time, endTime: '', location: '', notes: '', createdAt: nowISO() });
+      else if (k === 'note') state.notes.push({ id: uid(), title: text.length > 60 ? text.slice(0, 57) + '…' : text, body: text, kind: 'note', linkType: '', linkId: '', createdAt: nowISO(), updatedAt: nowISO() });
+      else state.tasks.push({ id: uid(), title: text, due: k === 'reminder' ? (date || today()) : date, time: k === 'reminder' ? time : '', priority: k === 'task' ? (fd.get('priority') || 'medium') : 'medium', category: '', recur: 'none', projectId: '', goalId: '', reminder: k === 'reminder', focus: false, notes: '', done: false, completedAt: null, createdAt: nowISO() });
+      save(); render(); $('#qa-text')?.focus();
+      toast(`${cap(k)} added: “${text}”.`);
+      break;
+    }
+    case 'measure': { const g = find('goals', id); const v = fd.get('value'); g.measureCurrent = v === '' ? '' : Number(v); save(); render(); toast(`Progress updated — ${goalProgress(g)}% of the way.`); break; }
+    case 'ms-add': { const g = find('goals', id); g.milestones.push({ id: uid(), title: fd.get('title').toString().trim(), done: false }); save(); render(); $(`#msadd-${id}`)?.focus(); toast('Milestone added.'); break; }
+    case 'project-task': { const p = find('projects', id); state.tasks.push({ id: uid(), title: fd.get('title').toString().trim(), due: '', time: '', priority: 'medium', category: p.category || '', recur: 'none', projectId: p.id, goalId: '', reminder: false, focus: false, notes: '', done: false, completedAt: null, createdAt: nowISO() }); save(); render(); $(`#pt-${id}`)?.focus(); toast(`Added to “${p.title}”.`); break; }
+    case 'cat-add': { const c = fd.get('cat').toString().trim(); if (c && !state.settings.categories.includes(c)) { state.settings.categories.push(c); save(); render(); toast(`Category “${c}” added.`); } $('#cat-new')?.focus(); break; }
+    case 'import': { const file = fd.get('file'); if (file && file.size) importData(file, fd.get('mode')); break; }
+    case 'review': saveReview(fd); break;
+  }
+});
+
+/* Filters + quick-add type switch (no full re-render for typing in quick add) */
+document.addEventListener('change', e => {
+  const el = e.target;
+  if (el.name === 'kind' && el.closest('[data-form="quick"]')) {
+    ui.qaKind = el.value;
+    const form = el.form;
+    form.querySelectorAll('[data-kinds]').forEach(fld => fld.hidden = !fld.dataset.kinds.split(',').includes(el.value));
+    const labels = { task: ['Task', 'e.g. Book car service'], event: ['Event', 'e.g. Dentist appointment'], reminder: ['Remind me to…', 'e.g. Put bins out'], note: ['Note or idea', 'Capture a thought…'] };
+    $('#qa-text-label').textContent = labels[el.value][0]; $('#qa-text').placeholder = labels[el.value][1];
+    const d = $('#qa-date'); if (d && !d.value && el.value !== 'task') d.value = today();
+    return;
+  }
+  if (el.dataset.filter && el.tagName === 'SELECT') { ui[el.dataset.filter] = el.value; render(); }
+});
+document.addEventListener('input', e => {
+  const el = e.target;
+  if (el.dataset.filter && el.type === 'search') { ui[el.dataset.filter] = el.value; render(); }
+});
+
+/* Calendar arrow-key navigation (roving tabindex) + global shortcuts */
+document.addEventListener('keydown', e => {
+  const day = e.target.closest && e.target.closest('.cal-day');
+  if (day) {
+    const moves = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 };
+    let next = null;
+    if (e.key in moves) next = addDays(day.dataset.date, moves[e.key]);
+    else if (e.key === 'PageUp') next = addMonths(day.dataset.date, -1);
+    else if (e.key === 'PageDown') next = addMonths(day.dataset.date, 1);
+    else if (e.key === 'Home') next = startOfWeek(day.dataset.date);
+    else if (e.key === 'End') next = addDays(startOfWeek(day.dataset.date), 6);
+    if (next) {
+      e.preventDefault(); ui.calSelected = next; ui.calMonth = next.slice(0, 8) + '01'; render();
+      main.querySelector(`.cal-day[data-date="${next}"]`)?.focus();
+    }
+    return;
+  }
+  // Single-key shortcuts — can be switched off in Data & sync (WCAG 2.1.4).
+  if (!state.settings.shortcuts || e.ctrlKey || e.metaKey || e.altKey) return;
+  const tag = (e.target.tagName || '').toLowerCase();
+  if (['input', 'textarea', 'select'].includes(tag) || e.target.isContentEditable || $('#dlg').open) return;
+  if (e.key === 'n' || e.key === 'N') { e.preventDefault(); openForm('task'); }
+  else if (e.key === '/') { e.preventDefault(); if (currentView() !== 'tasks') location.hash = 'tasks'; setTimeout(() => $('#task-search')?.focus(), 30); }
+  else if (/^[1-9]$/.test(e.key)) { const k = VIEW_KEYS[Number(e.key) - 1]; if (k) location.hash = k; }
+});
+
+/* =====================================================================
+   REVIEW / IMPORT / EXPORT
+   ===================================================================== */
+function saveReview(fd) {
+  const ws = startOfWeek(today()), nextWeek = addDays(ws, 7);
+  let r = state.reviews.find(x => x.weekOf === ws);
+  if (!r) { r = { id: uid(), weekOf: ws, createdAt: nowISO() }; state.reviews.push(r); }
+  ['wins', 'challenges', 'learned', 'nextSteps'].forEach(k => r[k] = (fd.get(k) || '').toString().trim());
+  r.updatedAt = nowISO();
+  let made = 0;
+  if (fd.has('makeTasks')) {
+    r.nextSteps.split('\n').map(s => s.trim()).filter(Boolean).forEach(title => {
+      if (state.tasks.some(t => !t.done && t.title === title)) return; // avoid duplicates on re-save
+      state.tasks.push({ id: uid(), title, due: nextWeek, time: '', priority: 'medium', category: 'Personal', recur: 'none', projectId: '', goalId: '', reminder: false, focus: false, notes: 'From weekly review', done: false, completedAt: null, createdAt: nowISO() });
+      made++;
+    });
+  }
+  const chosen = fd.getAll('focusGoal');
+  state.goals.forEach(g => { if (chosen.includes(g.id)) g.focusWeekOf = nextWeek; else if (g.focusWeekOf === nextWeek) g.focusWeekOf = ''; });
+  save(); render();
+  toast(`Review saved${made ? ` and ${plural(made, 'task')} created for next week` : ''}. Well done for pausing to reflect.`);
+}
+
+function exportData() {
+  const payload = { app: 'life-hub', exportedAt: nowISO(), ...state };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = `lifehub-backup-${today()}.json`;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  state.meta.lastExport = nowISO(); save(); render();
+  toast('Backup exported. Keep it somewhere safe, such as your personal cloud storage.');
+}
+
+async function importData(file, mode) {
+  let d;
+  try { d = JSON.parse(await file.text()); } catch (_) { toast('That file isn’t valid JSON.', { type: 'error' }); return; }
+  if (!d || typeof d !== 'object' || !COLLECTIONS.some(k => Array.isArray(d[k]))) { toast('This doesn’t look like a Life Hub backup.', { type: 'error' }); return; }
+  const incoming = normalise(d);
+  const total = COLLECTIONS.reduce((n, k) => n + incoming[k].length, 0);
+  if (mode === 'replace') {
+    if (!confirm(`Replace everything on this device with ${total} items from “${file.name}”?`)) return;
+    incoming.meta.isSample = false; state = incoming;
+  } else {
+    // Merge by id; the incoming copy wins only if it was updated more recently.
+    let added = 0, updated = 0;
+    for (const k of COLLECTIONS) {
+      const map = new Map(state[k].map(x => [x.id, x]));
+      incoming[k].forEach(x => {
+        const cur = map.get(x.id);
+        if (!cur) { state[k].push(x); added++; }
+        else if ((x.updatedAt || x.completedAt || x.createdAt || '') > (cur.updatedAt || cur.completedAt || cur.createdAt || '')) { Object.assign(cur, x); updated++; }
+      });
+    }
+    incoming.settings.categories.forEach(c => { if (!state.settings.categories.includes(c)) state.settings.categories.push(c); });
+    state.meta.isSample = false;
+    save(); render(); toast(`Merged: ${added} added, ${updated} updated.`); return;
+  }
+  save(); render(); toast(`Imported ${total} items.`);
+}
+
+/* Keep multiple tabs on the same device consistent. */
+window.addEventListener('storage', e => {
+  if (e.key === STORAGE_KEY && e.newValue) { try { state = normalise(JSON.parse(e.newValue)); render(); } catch (_) {} }
+});
+/* Refresh "today" if the tab is left open overnight. */
+let lastDay = today();
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && today() !== lastDay) { lastDay = today(); render(); }
+});
+
+render();
+</script>
+</body>
+</html>
